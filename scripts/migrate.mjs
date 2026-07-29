@@ -28,10 +28,42 @@ function resolvePrisma() {
 
 const { DATABASE_URL, DIRECT_DATABASE_URL } = process.env;
 
+/**
+ * "DATABASE_URL is not set" is a dead end on a hosted build — you can't
+ * inspect the environment from a log. So report what the build *can* see:
+ * variable names and presence only, never values, since these are secrets.
+ */
+function diagnose() {
+  const expected = [
+    "DATABASE_URL",
+    "DIRECT_DATABASE_URL",
+    "SESSION_SECRET",
+    "NEXT_PUBLIC_APP_URL",
+  ];
+
+  const lines = expected.map((name) => {
+    const value = process.env[name];
+    const state = value ? `set (${value.length} chars)` : "MISSING";
+    return `    ${name.padEnd(22)} ${state}`;
+  });
+
+  // Vercel injects these; seeing them confirms we really are on Vercel and
+  // tells us which environment's variables should have applied.
+  const vercelEnv = process.env.VERCEL_ENV;
+  const context = vercelEnv
+    ? `  Detected Vercel environment: ${vercelEnv}\n` +
+      `  → In Vercel, environment variables are scoped per environment.\n` +
+      `    Check the "${vercelEnv}" box is ticked for each variable, then redeploy.\n`
+    : "";
+
+  return `  What this build can see:\n${lines.join("\n")}\n\n${context}`;
+}
+
 if (!DATABASE_URL) {
   console.error(
-    "\n✗ DATABASE_URL is not set — cannot run migrations.\n" +
-      "  Add it in your host's environment variables and redeploy.\n",
+    "\n✗ DATABASE_URL is not set — cannot run migrations.\n\n" +
+      diagnose() +
+      "\n  Add the missing variable(s) in your host's settings and redeploy.\n",
   );
   process.exit(1);
 }
