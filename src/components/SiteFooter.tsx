@@ -24,8 +24,13 @@ const COLUMNS = [
     title: "Trust",
     links: [
       { href: "/verify", label: "Verify a certificate" },
-      { href: "/register", label: "Create an account" },
-      { href: "/login", label: "Sign in" },
+      { href: "/legal/risk-disclosure", label: "Risk disclosure" },
+      {
+        href: "/legal/financial-education-disclaimer",
+        label: "Education disclaimer",
+      },
+      { href: "/legal/community-guidelines", label: "Community guidelines" },
+      { href: "/legal/privacy", label: "Privacy" },
     ],
   },
 ];
@@ -67,8 +72,14 @@ export function SiteFooter() {
         <div className="mt-10 pt-6 border-t border-ink-800 flex flex-col sm:flex-row gap-3 justify-between text-xs text-mist-400">
           <p>© {new Date().getFullYear()} Maby Academy. All rights reserved.</p>
           <p>
-            Education only — nothing here is financial advice. Do your own
-            research.
+            Education only — nothing here is financial advice.{" "}
+            <Link
+              href="/legal/risk-disclosure"
+              className="text-gold-400 hover:text-gold-300"
+            >
+              Read the risk disclosure
+            </Link>
+            .
           </p>
         </div>
       </div>

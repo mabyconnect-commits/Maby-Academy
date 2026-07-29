@@ -59,7 +59,10 @@ export async function trackLessonProgress(params: {
     select: {
       id: true,
       title: true,
+      type: true,
       pointsValue: true,
+      videoDuration: true,
+      minWatchPercent: true,
       module: { select: { courseId: true, course: { select: { slug: true } } } },
     },
   });
@@ -83,7 +86,7 @@ export async function trackLessonProgress(params: {
     });
 
     const wasCompleted = existing?.isCompleted ?? false;
-    const nowCompleted = params.completed ?? wasCompleted;
+    const requested = params.completed ?? wasCompleted;
 
     // Watch position only ever moves forward — scrubbing back shouldn't
     // discard how far the student has actually watched.
@@ -91,6 +94,28 @@ export async function trackLessonProgress(params: {
       existing?.watchedSeconds ?? 0,
       params.watchedSeconds ?? 0,
     );
+
+    // Completion gate: opening a page must never count as learning. Only
+    // applies where a duration and a threshold are actually configured, so
+    // lessons without video are unaffected.
+    const gated =
+      lesson.type === "VIDEO" &&
+      lesson.minWatchPercent > 0 &&
+      (lesson.videoDuration ?? 0) > 0;
+
+    if (requested && !wasCompleted && gated) {
+      const watchedPercent = Math.round(
+        (watchedSeconds / (lesson.videoDuration as number)) * 100,
+      );
+      if (watchedPercent < lesson.minWatchPercent) {
+        throw new ServiceError(
+          `Watch at least ${lesson.minWatchPercent}% of this lesson before marking it complete — you're at ${watchedPercent}%.`,
+          400,
+        );
+      }
+    }
+
+    const nowCompleted = requested;
 
     await tx.lessonProgress.upsert({
       where: {

@@ -28,6 +28,7 @@ import {
   registerUser,
 } from "@/server/services/auth";
 import { audit } from "@/server/services/notifications";
+import { enforceRateLimit } from "@/server/services/rateLimit";
 import type { FormState } from "./formState";
 
 function toFormState(error: unknown): FormState {
@@ -63,6 +64,9 @@ export async function registerAction(
   formData: FormData,
 ): Promise<FormState> {
   try {
+    const meta = await requestMeta();
+    await enforceRateLimit("register", meta.ipAddress ?? "unknown");
+
     const input = registerSchema.parse({
       name: formData.get("name"),
       email: formData.get("email"),
@@ -71,7 +75,6 @@ export async function registerAction(
     });
 
     const user = await registerUser(input);
-    const meta = await requestMeta();
     await createSession(user.id, meta);
     await audit({
       userId: user.id,
@@ -94,13 +97,20 @@ export async function loginAction(
   const nextPath = String(formData.get("next") || "/dashboard");
 
   try {
+    const meta = await requestMeta();
+
     const input = loginSchema.parse({
       email: formData.get("email"),
       password: formData.get("password"),
     });
 
+    // Limited per IP *and* per account: per-IP alone lets a distributed
+    // attacker spread guesses across addresses against one target, while
+    // per-account alone lets one address spray many accounts.
+    await enforceRateLimit("login", meta.ipAddress ?? "unknown");
+    await enforceRateLimit("login", `acct:${input.email}`);
+
     const user = await authenticate(input.email, input.password);
-    const meta = await requestMeta();
     await createSession(user.id, meta);
     await audit({
       userId: user.id,
@@ -128,6 +138,9 @@ export async function requestResetAction(
   formData: FormData,
 ): Promise<FormState> {
   try {
+    const meta = await requestMeta();
+    await enforceRateLimit("passwordReset", meta.ipAddress ?? "unknown");
+
     const { email } = requestResetSchema.parse({ email: formData.get("email") });
     const token = await createPasswordReset(email);
 

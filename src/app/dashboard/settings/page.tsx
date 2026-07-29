@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { requireUser } from "@/lib/auth/session";
+import { cookies } from "next/headers";
+import { requireUser, SESSION_COOKIE } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { Card, Pill, SectionHeading } from "@/components/ui";
+import {
+  listSessions,
+  recentSecurityActivity,
+} from "@/server/services/security";
+import { Card, SectionHeading } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
 import { ProfileForm } from "./ProfileForm";
 import { PasswordForm } from "./PasswordForm";
+import { SessionList } from "./SessionList";
 
 export const metadata: Metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -27,19 +33,13 @@ export default async function SettingsPage() {
         referredBy: { select: { name: true } },
       },
     }),
-    db.session.findMany({
-      where: { userId: sessionUser.id },
-      orderBy: { lastActivityAt: "desc" },
-      take: 10,
-      select: {
-        id: true,
-        ipAddress: true,
-        userAgent: true,
-        createdAt: true,
-        expiresAt: true,
-      },
-    }),
+    (async () => {
+      const store = await cookies();
+      return listSessions(sessionUser.id, store.get(SESSION_COOKIE)?.value);
+    })(),
   ]);
+
+  const activity = await recentSecurityActivity(sessionUser.id, 8);
 
   return (
     <div className="space-y-8">
@@ -99,34 +99,51 @@ export default async function SettingsPage() {
       {/* Sessions --------------------------------------------------------- */}
       <Card>
         <SectionHeading
-          title="Active sessions"
-          subtitle="Devices currently signed in to your account."
+          title="Where you're signed in"
+          subtitle="Every device holding a live session. Sign out anything you don't recognise."
         />
-        <ul className="space-y-2.5">
-          {sessions.map((s) => (
-            <li
-              key={s.id}
-              className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-800 pb-2.5 last:border-0 last:pb-0"
-            >
-              <div className="min-w-0">
-                <p className="text-sm text-mist-200 truncate max-w-md">
-                  {s.userAgent ?? "Unknown device"}
-                </p>
-                <p className="text-xs text-mist-400">
-                  {s.ipAddress ?? "unknown IP"} · started{" "}
-                  {formatDate(s.createdAt, true)}
-                </p>
-              </div>
-              <Pill tone={s.expiresAt > new Date() ? "growth" : "neutral"}>
-                {s.expiresAt > new Date() ? "Active" : "Expired"}
-              </Pill>
-            </li>
-          ))}
-        </ul>
+        <SessionList sessions={sessions} />
+      </Card>
+
+      {/* Security activity ------------------------------------------------ */}
+      <Card>
+        <SectionHeading
+          title="Recent security activity"
+          subtitle="Sign-ins and credential changes on your account."
+        />
+        {activity.length === 0 ? (
+          <p className="text-sm text-mist-400">Nothing recorded yet.</p>
+        ) : (
+          <ul className="space-y-2.5">
+            {activity.map((entry) => (
+              <li
+                key={entry.id}
+                className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-800 pb-2.5 last:border-0 last:pb-0"
+              >
+                <span className="text-sm text-mist-200">
+                  {SECURITY_LABELS[entry.action] ?? entry.action}
+                </span>
+                <span className="text-xs text-mist-400">
+                  {entry.ipAddress ? `${entry.ipAddress} · ` : ""}
+                  {formatDate(entry.createdAt, true)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
     </div>
   );
 }
+
+const SECURITY_LABELS: Record<string, string> = {
+  "user.login": "Signed in",
+  "user.register": "Account created",
+  "user.password_change": "Password changed",
+  "user.password_reset": "Password reset",
+  "session.revoked": "A device was signed out",
+  "session.revoked_others": "All other devices signed out",
+};
 
 function Row({
   label,

@@ -246,8 +246,13 @@ enum CourseLevel {
   ADVANCED
 }
 
+/// Editorial workflow. The gate only means something if the author cannot
+/// open it themselves — publishing is separated from approval by design.
 enum CourseStatus {
   DRAFT
+  IN_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
   PUBLISHED
   ARCHIVED
 }
@@ -406,10 +411,17 @@ model Course {
   instructorId String
   instructor   User     @relation("CourseInstructor", fields: [instructorId], references: [id])
 
+  // --- Editorial review -------------------------------------------------
+  submittedForReviewAt DateTime?
+  reviewedById         String?
+  reviewedAt           DateTime?
+  reviewNotes          String?
+
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  reviews_log  CourseReviewLog[]
   modules      Module[]
   enrollments  Enrollment[]
   certificates Certificate[]
@@ -467,6 +479,11 @@ model Lesson {
   /// Free lessons are viewable without enrolment — the marketing hook.
   isPreview  Boolean @default(false)
   pointsValue Int    @default(10)
+
+  /// Opening a page must never count as learning. For VIDEO lessons the
+  /// student must have watched at least this share before completion is
+  /// accepted; 0 disables the check.
+  minWatchPercent Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1645,4 +1662,38 @@ model NotificationPreference {
   updatedAt DateTime @updatedAt
 
   @@map("notification_preferences")
+}
+
+/// Append-only editorial history for a course. Separate from AuditLog so
+/// instructors and reviewers can see their own workflow without being granted
+/// access to the platform-wide audit trail.
+model CourseReviewLog {
+  id         String       @id @default(cuid())
+  courseId   String
+  course     Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  actorId    String
+  fromStatus CourseStatus
+  toStatus   CourseStatus
+  notes      String?
+  createdAt  DateTime     @default(now())
+
+  @@index([courseId, createdAt])
+  @@map("course_review_logs")
+}
+
+/// Fixed-window rate limiting, stored in Postgres.
+///
+/// Redis would be the natural home, but adding a second datastore purely for
+/// this is not yet justified — the volumes are small and the window rows are
+/// cheap. `key` is a scope + identifier, e.g. "login:192.0.2.1".
+model RateLimit {
+  id          String   @id @default(cuid())
+  key         String
+  windowStart DateTime
+  count       Int      @default(0)
+  expiresAt   DateTime
+
+  @@unique([key, windowStart])
+  @@index([expiresAt])
+  @@map("rate_limits")
 }

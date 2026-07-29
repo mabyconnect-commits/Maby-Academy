@@ -39,14 +39,93 @@
   --radius-card: 1rem;
 }
 
+/* ==========================================================================
+   Theming
+
+   Dark is the default and the designed-for case. Light mode remaps the ink
+   and mist scales rather than introducing a parallel set of tokens, so every
+   component resolves correctly in both without changing a single class name.
+
+   The remap inverts *lightness* while holding hue: ink-950 (darkest surface)
+   becomes the lightest surface, mist-100 (brightest text) becomes the darkest
+   text. Gold darkens in light mode because the dark-mode gold fails contrast
+   on a white background.
+   ========================================================================== */
+
 :root {
   color-scheme: dark;
+  --page-glow-gold: rgba(217, 164, 65, 0.09);
+  --page-glow-growth: rgba(30, 179, 127, 0.08);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+
+    --color-ink-950: #f7f8fb;
+    --color-ink-900: #ffffff;
+    --color-ink-850: #ffffff;
+    --color-ink-800: #eef1f7;
+    --color-ink-700: #dde3ee;
+    --color-ink-600: #c8d1e2;
+    --color-ink-500: #a9b5cc;
+
+    --color-mist-400: #5b6880;
+    --color-mist-300: #3d4a63;
+    --color-mist-200: #263148;
+    --color-mist-100: #0d1526;
+
+    --color-gold-600: #7a5713;
+    --color-gold-500: #9a6f1c;
+    --color-gold-400: #b8862b;
+    --color-gold-300: #6b4d11;
+
+    --color-growth-600: #0c6b4a;
+    --color-growth-500: #0f7d57;
+    --color-growth-400: #0a5c40;
+
+    --color-flag-500: #b3352d;
+    --color-flag-400: #922a23;
+
+    --page-glow-gold: rgba(217, 164, 65, 0.13);
+    --page-glow-growth: rgba(30, 179, 127, 0.1);
+  }
+}
+
+/* Explicit override, for a future user-facing theme toggle. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-ink-950: #f7f8fb;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #ffffff;
+  --color-ink-800: #eef1f7;
+  --color-ink-700: #dde3ee;
+  --color-ink-600: #c8d1e2;
+  --color-ink-500: #a9b5cc;
+
+  --color-mist-400: #5b6880;
+  --color-mist-300: #3d4a63;
+  --color-mist-200: #263148;
+  --color-mist-100: #0d1526;
+
+  --color-gold-600: #7a5713;
+  --color-gold-500: #9a6f1c;
+  --color-gold-400: #b8862b;
+  --color-gold-300: #6b4d11;
+
+  --color-growth-600: #0c6b4a;
+  --color-growth-500: #0f7d57;
+  --color-growth-400: #0a5c40;
+
+  --color-flag-500: #b3352d;
+  --color-flag-400: #922a23;
 }
 
 body {
   background:
-    radial-gradient(1100px 600px at 12% -8%, rgba(217, 164, 65, 0.09), transparent 60%),
-    radial-gradient(900px 520px at 92% 4%, rgba(30, 179, 127, 0.08), transparent 58%),
+    radial-gradient(1100px 600px at 12% -8%, var(--page-glow-gold), transparent 60%),
+    radial-gradient(900px 520px at 92% 4%, var(--page-glow-growth), transparent 58%),
     var(--color-ink-950);
   color: var(--color-mist-100);
   font-family: var(--font-sans);

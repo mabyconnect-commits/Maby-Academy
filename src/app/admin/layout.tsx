@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentUser, isStaff } from "@/lib/auth/session";
+import { can, getCurrentUser, isStaff } from "@/lib/auth/session";
 import { Logo } from "@/components/Brand";
 import { Avatar, Pill } from "@/components/ui";
 
@@ -23,22 +23,44 @@ export default async function AdminLayout({
             <Pill tone="gold">Instructor tools</Pill>
           </div>
 
-          <nav className="flex items-center gap-4" aria-label="Instructor">
+          {/* Only surface the areas this member actually has powers in. */}
+          <nav
+            className="flex items-center gap-4 overflow-x-auto"
+            aria-label="Instructor"
+          >
             <Link
               href="/admin"
-              className="text-sm text-mist-300 hover:text-mist-100"
+              className="text-sm text-mist-300 hover:text-mist-100 whitespace-nowrap"
             >
               Overview
             </Link>
-            <Link
-              href="/admin/grading"
-              className="text-sm text-mist-300 hover:text-mist-100"
-            >
-              Grading
-            </Link>
+            {can(user, "submission:grade") && (
+              <Link
+                href="/admin/grading"
+                className="text-sm text-mist-300 hover:text-mist-100 whitespace-nowrap"
+              >
+                Grading
+              </Link>
+            )}
+            {can(user, "course:approve") && (
+              <Link
+                href="/admin/review"
+                className="text-sm text-mist-300 hover:text-mist-100 whitespace-nowrap"
+              >
+                Review
+              </Link>
+            )}
+            {can(user, "commission:approve") && (
+              <Link
+                href="/admin/finance"
+                className="text-sm text-mist-300 hover:text-mist-100 whitespace-nowrap"
+              >
+                Finance
+              </Link>
+            )}
             <Link
               href="/dashboard"
-              className="text-sm text-mist-300 hover:text-mist-100"
+              className="text-sm text-mist-300 hover:text-mist-100 whitespace-nowrap"
             >
               My dashboard
             </Link>

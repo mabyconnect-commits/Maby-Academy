@@ -6,10 +6,12 @@ import {
   Avatar,
   Card,
   Pill,
+  ProgressBar,
   SectionHeading,
   StatTile,
 } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { LEVEL_TIERS, levelFor, levelProgress, pointsToNextLevel } from "@/lib/levels";
 
 export const metadata: Metadata = { title: "Rewards" };
 export const dynamic = "force-dynamic";
@@ -38,6 +40,11 @@ export default async function RewardsPage() {
 
   const earnedIds = new Set(overview.badges.map((b) => b.badgeId));
 
+  const lifetime = overview.user?.lifetimePoints ?? 0;
+  const level = levelFor(lifetime);
+  const progress = levelProgress(lifetime);
+  const toNext = pointsToNextLevel(lifetime);
+
   return (
     <div className="space-y-8">
       <header>
@@ -47,6 +54,32 @@ export default async function RewardsPage() {
           showing up when you don&apos;t feel like it.
         </p>
       </header>
+
+      {/* Level ----------------------------------------------------------- */}
+      <Card className="border-gold-600/30 bg-gold-500/[0.04]">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-mist-400">
+              Level {level.number}
+            </p>
+            <h2 className="mt-1 text-2xl font-semibold text-gradient-gold">
+              {level.name}
+            </h2>
+          </div>
+          <p className="text-sm text-mist-400">
+            {toNext === null
+              ? "Top tier reached — nothing above this."
+              : `${toNext.toLocaleString()} points to ${LEVEL_TIERS[level.number]?.name}`}
+          </p>
+        </div>
+        <div className="mt-4">
+          <ProgressBar value={progress} showLabel />
+        </div>
+        <p className="mt-2 text-xs text-mist-400">
+          {lifetime.toLocaleString()} lifetime points. Levels come from lifetime
+          points, so spending never costs you rank.
+        </p>
+      </Card>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatTile
@@ -72,6 +105,56 @@ export default async function RewardsPage() {
           hint={`of ${overview.totalStudents}`}
         />
       </div>
+
+      {/* Tier ladder ----------------------------------------------------- */}
+      <section>
+        <SectionHeading
+          title="The ladder"
+          subtitle="Thresholds widen as they climb — early levels arrive fast, later ones represent real work."
+        />
+        <Card className="p-0 overflow-hidden">
+          <ol className="divide-y divide-ink-800">
+            {LEVEL_TIERS.map((tier, i) => {
+              const reached = lifetime >= tier.minPoints;
+              const current = i + 1 === level.number;
+              return (
+                <li
+                  key={tier.name}
+                  className={`flex items-center gap-3 px-4 py-2.5 ${
+                    current ? "bg-gold-500/[0.06]" : ""
+                  }`}
+                >
+                  <span
+                    className={`w-6 text-sm tabular-nums shrink-0 ${
+                      reached ? "text-gold-400" : "text-mist-400"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span
+                    className={`flex-1 text-sm ${
+                      reached ? "text-mist-100" : "text-mist-400"
+                    }`}
+                  >
+                    {tier.name}
+                    {current && (
+                      <span className="ml-2 text-xs text-gold-400">you</span>
+                    )}
+                  </span>
+                  <span className="text-xs tabular-nums text-mist-400">
+                    {tier.minPoints.toLocaleString()} pts
+                  </span>
+                  {reached && (
+                    <span className="text-growth-400 text-xs" aria-hidden>
+                      ✓
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </Card>
+      </section>
 
       {/* Badges ---------------------------------------------------------- */}
       <section>
