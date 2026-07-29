@@ -862,7 +862,10 @@ async function main() {
             amountMinor: course.priceMinor,
             currency: course.currency,
             status: "PAID",
-            provider: "manual",
+            // Demo history only. Real purchases go through Flutterwave and are
+            // fulfilled by checkout.fulfilOrder after verification.
+            provider: "seed",
+            providerRef: `SEED-${userId.slice(-6)}-${courseId.slice(-6)}`.toUpperCase(),
             paidAt: new Date(),
           },
         }));

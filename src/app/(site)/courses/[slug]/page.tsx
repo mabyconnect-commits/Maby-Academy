@@ -12,6 +12,7 @@ import {
   StatusPill,
 } from "@/components/ui";
 import { formatDuration, formatMoney, pluralize } from "@/lib/utils";
+import { paymentsEnabled } from "@/lib/payments";
 import { EnrollButton } from "./EnrollButton";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +47,7 @@ export default async function CoursePage({
   const { slug } = await params;
   const user = await getCurrentUser();
   const course = await getCourseBySlug(slug, user?.id);
+  const checkoutAvailable = paymentsEnabled();
 
   if (!course) notFound();
   if (course.status !== "PUBLISHED" && user?.role !== "ADMIN") notFound();
@@ -301,6 +303,9 @@ export default async function CoursePage({
                     courseId={course.id}
                     slug={course.slug}
                     isSignedIn={Boolean(user)}
+                    isPaid={course.priceMinor > 0}
+                    paymentsAvailable={checkoutAvailable}
+                    priceLabel={formatMoney(course.priceMinor, course.currency)}
                   />
                 </div>
               </>

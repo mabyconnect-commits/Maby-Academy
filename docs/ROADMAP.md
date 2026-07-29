@@ -174,14 +174,14 @@ Last updated: Phase B (partials closed — editorial workflow, finance, security
 | One-time / monthly / quarterly / annual / lifetime | ⬜ | |
 | Instalments | ⬜ | |
 | Coupons | ⬜ | |
-| Invoices & receipts | ⬜ | |
+| Invoices & receipts | 🟡 | Invoice created on payment; PDF/receipt page ⬜ |
 | Refunds | ⬜ | |
 | Scholarships | ⬜ | |
 | Gift enrolments | ⬜ | |
 | Team / organisation plans | ⬜ | |
-| Payment provider abstraction | 🟡 | `provider` field exists; only `manual` implemented |
-| Paystack / Flutterwave / Stripe | ⬜ | |
-| Webhook verification + idempotency | ⬜ | Design already idempotent on order id |
+| Payment provider abstraction | ✅ | `PaymentProvider` interface + registry; no provider named above `lib/payments` |
+| Flutterwave | ✅ | Hosted checkout, verify-by-reference, signed webhooks |
+| Webhook verification + idempotency | ✅ | Constant-time `verif-hash`, re-read inside transaction |
 | Multi-currency | 🟡 | Currency stored per course/order; no FX |
 | Tax configuration | ⬜ | |
 | Wallet credits | ⬜ | |

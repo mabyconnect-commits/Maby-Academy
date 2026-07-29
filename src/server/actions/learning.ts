@@ -13,7 +13,10 @@ import {
   rsvpSchema,
   submissionSchema,
 } from "@/lib/validation";
+import { db } from "@/lib/db";
+import { PaymentError } from "@/lib/payments";
 import { ServiceError } from "@/server/services/auth";
+import { startCourseCheckout } from "@/server/services/checkout";
 import { enrollUser, upsertReview } from "@/server/services/courses";
 import { trackLessonProgress } from "@/server/services/progress";
 import {
@@ -33,7 +36,7 @@ function toFormState(error: unknown): FormState {
     }
     return { ok: false, message: error.issues[0]?.message, fieldErrors };
   }
-  if (error instanceof ServiceError) {
+  if (error instanceof ServiceError || error instanceof PaymentError) {
     return { ok: false, message: error.message };
   }
   if (error instanceof Error && error.message.includes("signed in")) {
@@ -43,23 +46,44 @@ function toFormState(error: unknown): FormState {
   return { ok: false, message: "Something went wrong. Please try again." };
 }
 
+/**
+ * Enrol, or start checkout.
+ *
+ * Free courses enrol immediately. Paid courses redirect to the payment
+ * provider — enrolment then happens only once the payment is verified, so a
+ * cancelled checkout leaves nothing behind but a PENDING order.
+ */
 export async function enrollAction(
   _prev: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  let slug: string | null = null;
+  let destination: string | null = null;
+
   try {
     const user = await requireUser();
     const { courseId } = enrollSchema.parse({ courseId: formData.get("courseId") });
-    slug = String(formData.get("slug") || "");
-    await enrollUser(user.id, courseId);
-    revalidatePath(`/courses/${slug}`);
-    revalidatePath("/dashboard");
+    const slug = String(formData.get("slug") || "");
+
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+      select: { priceMinor: true },
+    });
+    if (!course) return { ok: false, message: "That course is not available." };
+
+    if (course.priceMinor > 0) {
+      const checkout = await startCourseCheckout({ userId: user.id, courseId });
+      destination = checkout.paymentUrl;
+    } else {
+      await enrollUser(user.id, courseId);
+      revalidatePath(`/courses/${slug}`);
+      revalidatePath("/dashboard");
+      destination = slug ? `/courses/${slug}` : "/dashboard";
+    }
   } catch (error) {
     return toFormState(error);
   }
 
-  redirect(slug ? `/courses/${slug}` : "/dashboard");
+  redirect(destination);
 }
 
 export async function trackProgressAction(

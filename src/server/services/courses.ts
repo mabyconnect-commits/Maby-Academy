@@ -3,7 +3,6 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { ServiceError } from "./auth";
 import { notify } from "./notifications";
-import { payoutOrderCommissions } from "./referrals";
 
 export async function listCategories() {
   return db.category.findMany({
@@ -241,11 +240,13 @@ export async function getLessonForViewer(
 }
 
 /**
- * Enrol a user in a course.
+ * Enrol a user in a **free** course.
  *
- * Free courses enrol immediately. Paid courses create a PAID order (payment
- * provider integration slots in here) and fan out multi-level referral
- * commissions in the same transaction, so money and entitlement never diverge.
+ * Paid courses must go through `startCourseCheckout` and are only enrolled by
+ * `fulfilOrder` after the provider confirms payment. This function used to
+ * mark paid orders PAID directly, which was fine while there was no gateway
+ * and is a way to give away paid courses now that there is one — so it now
+ * refuses outright rather than trusting the caller to know the difference.
  */
 export async function enrollUser(userId: string, courseId: string) {
   const course = await db.course.findUnique({
@@ -269,31 +270,18 @@ export async function enrollUser(userId: string, courseId: string) {
   });
   if (existing) return existing;
 
+  // The guard that keeps money and entitlement in step.
+  if (course.priceMinor > 0) {
+    throw new ServiceError(
+      "This course requires payment. Start checkout instead.",
+      402,
+    );
+  }
+
   return db.$transaction(async (tx) => {
     const enrollment = await tx.enrollment.create({
       data: { userId, courseId, status: "ACTIVE" },
     });
-
-    if (course.priceMinor > 0) {
-      const order = await tx.order.create({
-        data: {
-          userId,
-          courseId,
-          amountMinor: course.priceMinor,
-          currency: course.currency,
-          status: "PAID",
-          provider: "manual",
-          paidAt: new Date(),
-        },
-      });
-
-      await payoutOrderCommissions(tx, {
-        orderId: order.id,
-        buyerId: userId,
-        amountMinor: course.priceMinor,
-        currency: course.currency,
-      });
-    }
 
     await notify(tx, {
       userId,

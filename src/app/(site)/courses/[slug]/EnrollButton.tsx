@@ -10,10 +10,16 @@ export function EnrollButton({
   courseId,
   slug,
   isSignedIn,
+  isPaid = false,
+  paymentsAvailable = true,
+  priceLabel,
 }: {
   courseId: string;
   slug: string;
   isSignedIn: boolean;
+  isPaid?: boolean;
+  paymentsAvailable?: boolean;
+  priceLabel?: string;
 }) {
   const [state, formAction] = useActionState(enrollAction, emptyFormState);
 
@@ -40,6 +46,15 @@ export function EnrollButton({
     );
   }
 
+  if (isPaid && !paymentsAvailable) {
+    return (
+      <Alert tone="info">
+        Card and bank payments are being set up. Check back shortly — free
+        courses are open in the meantime.
+      </Alert>
+    );
+  }
+
   return (
     <form action={formAction} className="space-y-3">
       <input type="hidden" name="courseId" value={courseId} />
@@ -47,9 +62,20 @@ export function EnrollButton({
 
       {state.message && <Alert tone="error">{state.message}</Alert>}
 
-      <SubmitButton className="w-full" size="lg" pendingText="Enrolling…">
-        Enrol now
+      <SubmitButton
+        className="w-full"
+        size="lg"
+        pendingText={isPaid ? "Opening checkout…" : "Enrolling…"}
+      >
+        {isPaid ? `Pay ${priceLabel ?? "now"}` : "Enrol now"}
       </SubmitButton>
+
+      {isPaid && (
+        <p className="text-center text-xs text-mist-400 leading-relaxed">
+          Secure checkout by Flutterwave. Card, bank transfer, USSD and mobile
+          money. You&apos;re enrolled the moment payment clears.
+        </p>
+      )}
     </form>
   );
 }
