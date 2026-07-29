@@ -15,31 +15,47 @@ export default function SetupPage() {
   const steps = [
     {
       n: "01",
-      title: "Create a Postgres database",
-      body: "Sign up at neon.tech and create a project. Choose a region near your students — Frankfurt is the closest option for West and East Africa.",
+      title: "Add a database from your Vercel project",
+      body: "Open the Storage tab → Create Database → Neon (Serverless Postgres). Pick a region near your students — Frankfurt is the closest for West and East Africa. Connect it to this project.",
     },
     {
       n: "02",
-      title: "Copy the pooled connection string",
-      body: "In Neon → Connection Details, copy the string whose hostname contains “-pooler”. Serverless functions each open their own connection, so the pooled URL is the one you want.",
+      title: "Let Vercel inject the connection",
+      body: "The integration adds the connection variables to your project automatically. This app accepts whichever names Vercel uses, so there is nothing to copy by hand.",
     },
     {
       n: "03",
-      title: "Add it to your hosting environment",
-      body: "In Vercel → Settings → Environment Variables, add DATABASE_URL with that value. Make sure the Production checkbox is ticked — variables are scoped per environment.",
+      title: "Add SESSION_SECRET yourself",
+      body: "This is the only value you must set manually: 32+ random characters that sign login sessions. It has to stay the same across deploys, so it cannot be generated automatically — a changing secret would sign everyone out at random.",
     },
     {
       n: "04",
       title: "Redeploy",
-      body: "Deployments → Redeploy. The build runs your database migrations automatically, and this page disappears.",
+      body: "Deployments → Redeploy. The build creates every table automatically, and this page disappears on its own.",
     },
   ];
 
   const vars = [
-    { name: "DATABASE_URL", required: true, note: "Pooled Postgres connection string" },
-    { name: "SESSION_SECRET", required: true, note: "32+ random characters — signs login sessions" },
-    { name: "NEXT_PUBLIC_APP_URL", required: true, note: "Your public domain, e.g. https://mabyacademy.site" },
-    { name: "DIRECT_DATABASE_URL", required: false, note: "Unpooled URL for migrations; falls back to DATABASE_URL" },
+    {
+      name: "SESSION_SECRET",
+      required: true,
+      note: "Set this by hand — 32+ random characters that sign login sessions",
+    },
+    {
+      name: "DATABASE_URL",
+      required: false,
+      note: "Provided by the Vercel Postgres/Neon integration. POSTGRES_PRISMA_URL and POSTGRES_URL are also accepted.",
+    },
+    {
+      name: "DIRECT_DATABASE_URL",
+      required: false,
+      note: "Unpooled URL for migrations. DATABASE_URL_UNPOOLED and POSTGRES_URL_NON_POOLING also accepted; falls back to the pooled URL.",
+    },
+    {
+      name: "NEXT_PUBLIC_APP_URL",
+      required: false,
+      note: "Defaults to your Vercel domain. Set it to your real domain before issuing certificates — the verification links are permanent.",
+    },
   ];
 
   return (
@@ -61,7 +77,14 @@ export default function SetupPage() {
           Your hosting is working and the application built successfully —
           you&apos;re seeing this page served from it right now. The academy
           stores courses, students, progress and certificates in a Postgres
-          database, and no connection string has been configured yet.
+          database, and no connection has been configured yet.
+        </p>
+
+        <p className="mt-4 text-sm text-mist-400 leading-relaxed">
+          The quickest route is Vercel&apos;s built-in Neon integration: it
+          provisions the database and wires the credentials in for you. The
+          only value you have to enter yourself is{" "}
+          <code className="text-gold-400">SESSION_SECRET</code>.
         </p>
 
         {/* Steps ------------------------------------------------------- */}

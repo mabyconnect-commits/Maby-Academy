@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { hasDatabase } from "@/lib/database-url";
 
 /**
  * When the app has no database configured, send every request to /setup.
@@ -8,11 +9,13 @@ import { NextResponse, type NextRequest } from "next/server";
  * ever runs, so nothing can attempt a query against a database that isn't
  * there. The deployment is live and explains itself instead of returning 500s.
  *
- * `process.env` is read directly rather than through `@/lib/env` because
- * middleware runs in a separate, lighter runtime.
+ * Detection goes through the same resolver the app uses — a platform
+ * integration may inject the connection under a name other than
+ * DATABASE_URL, and middleware must agree with the rest of the app about
+ * whether a database exists.
  */
 export function middleware(request: NextRequest) {
-  const configured = Boolean(process.env.DATABASE_URL);
+  const configured = hasDatabase();
   const { pathname } = request.nextUrl;
 
   if (!configured && pathname !== "/setup") {

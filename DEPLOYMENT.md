@@ -23,6 +23,40 @@ The steps below are that second part.
 
 ---
 
+## Fastest path — provision Neon from inside Vercel
+
+You do not need a separate Neon account or to copy any connection string.
+
+1. Open your project in Vercel → **Storage** tab
+2. **Create Database → Neon (Serverless Postgres)**
+3. Choose a region near your students (Frankfurt for West/East Africa)
+4. Connect it to the project
+
+Vercel injects the connection variables automatically. This app accepts every
+name Vercel uses — `DATABASE_URL`, `POSTGRES_PRISMA_URL`, `POSTGRES_URL`, and
+the unpooled `DATABASE_URL_UNPOOLED` / `POSTGRES_URL_NON_POOLING` — so there
+is nothing to copy across.
+
+Then add **one** variable by hand:
+
+| Name | Value |
+| --- | --- |
+| `SESSION_SECRET` | 32+ random characters (`openssl rand -base64 48`) |
+
+It cannot be auto-generated: it signs login sessions, so it must stay
+identical across every deploy and every serverless instance. A value that
+changed per deploy would sign people out at random.
+
+`NEXT_PUBLIC_APP_URL` is optional — it defaults to your Vercel domain. Set it
+to your real domain before issuing any certificates, since verification links
+are printed permanently.
+
+Redeploy, and the academy comes online.
+
+The longer, manual route follows for anyone not on Vercel.
+
+---
+
 ## Step 1 — Create the database (Neon)
 
 Vercel functions are serverless: each running instance opens its own database

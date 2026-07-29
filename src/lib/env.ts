@@ -1,5 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
+import {
+  resolveAppUrl,
+  resolveDatabaseUrl,
+  resolveDirectDatabaseUrl,
+} from "@/lib/database-url";
+
+const resolvedDatabase = resolveDatabaseUrl();
+const resolvedDirect = resolveDirectDatabaseUrl();
 
 /**
  * Setup mode.
@@ -15,7 +23,10 @@ import { z } from "zod";
  * missing SESSION_SECRET rather than quietly signing sessions with a key
  * that changes on every cold start.
  */
-export const isSetupMode = !process.env.DATABASE_URL;
+export const isSetupMode = resolvedDatabase === null;
+
+/** Which variable the connection string came from, for diagnostics. */
+export const databaseUrlSource = resolvedDatabase?.key ?? null;
 
 /**
  * Placeholders are substituted into the parsed config only — `process.env`
@@ -52,9 +63,9 @@ const schema = z.object({
 });
 
 const parsed = schema.safeParse({
-  DATABASE_URL: process.env.DATABASE_URL ?? (isSetupMode ? SETUP_DATABASE_URL : undefined),
-  DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  DATABASE_URL: resolvedDatabase?.value ?? (isSetupMode ? SETUP_DATABASE_URL : undefined),
+  DIRECT_DATABASE_URL: resolvedDirect?.value,
+  NEXT_PUBLIC_APP_URL: resolveAppUrl(),
   SESSION_SECRET:
     process.env.SESSION_SECRET ??
     // Ephemeral and never used: in setup mode nobody can sign in, because

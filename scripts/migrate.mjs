@@ -26,7 +26,32 @@ function resolvePrisma() {
   return existsSync(local) ? local : "prisma";
 }
 
-const { DATABASE_URL, DIRECT_DATABASE_URL } = process.env;
+/**
+ * Kept in sync with src/lib/database-url.ts. Duplicated rather than imported
+ * because this script runs before the TypeScript build exists.
+ */
+const APP_URL_KEYS = ["DATABASE_URL", "POSTGRES_PRISMA_URL", "POSTGRES_URL"];
+const DIRECT_URL_KEYS = [
+  "DIRECT_DATABASE_URL",
+  "DATABASE_URL_UNPOOLED",
+  "POSTGRES_URL_NON_POOLING",
+];
+
+function firstNonEmpty(keys) {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (typeof value === "string" && value.trim() !== "") {
+      return { key, value: value.trim() };
+    }
+  }
+  return null;
+}
+
+const resolvedApp = firstNonEmpty(APP_URL_KEYS);
+const resolvedDirect = firstNonEmpty(DIRECT_URL_KEYS);
+
+const DATABASE_URL = resolvedApp?.value;
+const DIRECT_DATABASE_URL = resolvedDirect?.value;
 
 /**
  * "DATABASE_URL is not set" is a dead end on a hosted build — you can't
@@ -35,16 +60,16 @@ const { DATABASE_URL, DIRECT_DATABASE_URL } = process.env;
  */
 function diagnose() {
   const expected = [
-    "DATABASE_URL",
-    "DIRECT_DATABASE_URL",
+    ...APP_URL_KEYS,
+    ...DIRECT_URL_KEYS,
     "SESSION_SECRET",
     "NEXT_PUBLIC_APP_URL",
   ];
 
   const lines = expected.map((name) => {
     const value = process.env[name];
-    const state = value ? `set (${value.length} chars)` : "MISSING";
-    return `    ${name.padEnd(22)} ${state}`;
+    const state = value ? `set (${value.length} chars)` : "—";
+    return `    ${name.padEnd(26)} ${state}`;
   });
 
   // Vercel injects these; seeing them confirms we really are on Vercel and
@@ -70,23 +95,30 @@ function diagnose() {
  */
 if (!DATABASE_URL) {
   console.warn(
-    "\n⚠ DATABASE_URL is not set — skipping migrations.\n\n" +
+    "\n⚠ No database connection string found — skipping migrations.\n\n" +
       diagnose() +
       "\n  The app will deploy in SETUP MODE: every route shows a setup page\n" +
-      "  until a database is configured. Add DATABASE_URL and redeploy to\n" +
-      "  bring the academy online.\n",
+      "  until a database is configured. Connect a Postgres database (on\n" +
+      "  Vercel: Storage → Neon) or set DATABASE_URL, then redeploy.\n",
   );
   process.exit(0);
 }
 
-const env = { ...process.env };
+console.log(`• Using ${resolvedApp.key} for the database connection.`);
 
-if (!DIRECT_DATABASE_URL) {
+// Prisma's CLI reads these specific names from the environment, so map
+// whatever the platform provided onto the names the schema references.
+const env = { ...process.env, DATABASE_URL };
+
+if (DIRECT_DATABASE_URL) {
+  env.DIRECT_DATABASE_URL = DIRECT_DATABASE_URL;
+  console.log(`• Using ${resolvedDirect.key} for migrations.`);
+} else {
   env.DIRECT_DATABASE_URL = DATABASE_URL;
   console.log(
-    "• DIRECT_DATABASE_URL not set — using DATABASE_URL for migrations.\n" +
-      "  If your database is behind a connection pooler, set DIRECT_DATABASE_URL\n" +
-      "  to the direct (unpooled) URL so migrations don't contend on locks.",
+    "• No unpooled URL found — using the pooled connection for migrations.\n" +
+      "  Fine for small schemas; set DIRECT_DATABASE_URL to the direct URL if\n" +
+      "  migrations ever contend on advisory locks.",
   );
 }
 
