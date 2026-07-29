@@ -59,13 +59,24 @@ function diagnose() {
   return `  What this build can see:\n${lines.join("\n")}\n\n${context}`;
 }
 
+/**
+ * No database configured: skip migrations and let the build continue.
+ *
+ * The app boots into setup mode and serves a page explaining what to add,
+ * which is more useful than a failed deploy with nothing running. Exiting 0
+ * here is safe because there is no database to leave un-migrated — the
+ * failure modes that must abort a build (unreachable server, failed
+ * migration) are still handled below by prisma's own exit code.
+ */
 if (!DATABASE_URL) {
-  console.error(
-    "\n✗ DATABASE_URL is not set — cannot run migrations.\n\n" +
+  console.warn(
+    "\n⚠ DATABASE_URL is not set — skipping migrations.\n\n" +
       diagnose() +
-      "\n  Add the missing variable(s) in your host's settings and redeploy.\n",
+      "\n  The app will deploy in SETUP MODE: every route shows a setup page\n" +
+      "  until a database is configured. Add DATABASE_URL and redeploy to\n" +
+      "  bring the academy online.\n",
   );
-  process.exit(1);
+  process.exit(0);
 }
 
 const env = { ...process.env };

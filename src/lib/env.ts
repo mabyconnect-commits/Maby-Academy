@@ -1,4 +1,30 @@
+import { randomBytes } from "node:crypto";
 import { z } from "zod";
+
+/**
+ * Setup mode.
+ *
+ * With no DATABASE_URL there is no academy — every page reads from the
+ * database. Rather than fail the build (leaving nothing deployed) or deploy
+ * something that 500s on every route, the app boots into a read-only setup
+ * page that explains what is missing.
+ *
+ * This is deliberately keyed on DATABASE_URL alone: it is the one variable
+ * that cannot be defaulted or invented. Once it is present the app switches
+ * to strict validation, so a *real* deployment still fails loudly on a
+ * missing SESSION_SECRET rather than quietly signing sessions with a key
+ * that changes on every cold start.
+ */
+export const isSetupMode = !process.env.DATABASE_URL;
+
+/**
+ * Placeholders are substituted into the parsed config only — `process.env`
+ * is never written to. Mutating it would make DATABASE_URL appear set to
+ * everything downstream, including the middleware whose entire job is to
+ * detect that it is absent.
+ */
+const SETUP_DATABASE_URL =
+  "postgresql://setup:setup@127.0.0.1:5432/setup?schema=public";
 
 /**
  * Environment is validated once, at import time, so a misconfigured deploy
@@ -26,10 +52,14 @@ const schema = z.object({
 });
 
 const parsed = schema.safeParse({
-  DATABASE_URL: process.env.DATABASE_URL,
+  DATABASE_URL: process.env.DATABASE_URL ?? (isSetupMode ? SETUP_DATABASE_URL : undefined),
   DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-  SESSION_SECRET: process.env.SESSION_SECRET,
+  SESSION_SECRET:
+    process.env.SESSION_SECRET ??
+    // Ephemeral and never used: in setup mode nobody can sign in, because
+    // every route redirects before a session is ever created.
+    (isSetupMode ? randomBytes(32).toString("hex") : undefined),
   SESSION_TTL_DAYS: process.env.SESSION_TTL_DAYS,
   REFERRAL_COMMISSION_RATES: process.env.REFERRAL_COMMISSION_RATES,
 });

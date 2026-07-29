@@ -8,6 +8,21 @@ A step-by-step checklist for `mabyacademy.site`.
 
 ---
 
+## You can deploy before any of this
+
+If you just want the site live now, **click Deploy with no environment
+variables set**. The build succeeds and every route serves a "setup required"
+page explaining what to add. Nothing crashes, and your domain resolves.
+
+The academy itself — courses, logins, certificates — needs a database, so
+setup mode is a staging post rather than a destination. When you add
+`DATABASE_URL` and redeploy, the setup page disappears on its own and the real
+site takes over.
+
+The steps below are that second part.
+
+---
+
 ## Step 1 — Create the database (Neon)
 
 Vercel functions are serverless: each running instance opens its own database
@@ -74,17 +89,20 @@ unless noted.
 
 `SESSION_TTL_DAYS` is optional and defaults to 30.
 
-**These must exist before the first build**, not just at runtime. The app
-validates its configuration when it loads, so a deploy missing
-`SESSION_SECRET` fails the build with:
+**These must exist before the first build**, not just at runtime — the app
+validates its configuration when it loads.
+
+The one exception is `DATABASE_URL`. Leave it out entirely and the build
+still succeeds, deploying in setup mode. Provide it, and validation turns
+strict: a deploy that has a database but no `SESSION_SECRET` fails the build
+with
 
 ```
 Invalid environment configuration:
   - SESSION_SECRET: Required
 ```
 
-That is intentional — far better than deploying something that breaks on the
-first login attempt.
+rather than shipping a site whose logins break on first use.
 
 ---
 
@@ -210,6 +228,7 @@ own Neon branch, or scope `DATABASE_URL` to Production only.
 | --- | --- | --- |
 | `Invalid environment configuration: SESSION_SECRET: Required` | Variable missing at build time | Add it in Settings → Environment Variables, redeploy |
 | `Can't reach database server` | Wrong or unreachable connection string | Re-copy from Neon; keep `?sslmode=require` |
+| Every page shows "Maby Academy is deployed / it just needs a database" | Setup mode — no `DATABASE_URL` | Add it and redeploy; the page disappears automatically |
 | `P1012: Environment variable not found: DIRECT_DATABASE_URL` | An older build ran `prisma migrate deploy` directly | Fixed — the build now falls back to `DATABASE_URL`. Redeploy the latest commit. |
 | `prisma migrate deploy` hangs or errors on advisory lock | Migrations are running through the pooled URL | Set `DIRECT_DATABASE_URL` to the direct (non-`-pooler`) string |
 | `too many connections` under load | `DATABASE_URL` is the direct URL | Swap it to the pooled (`-pooler`) string |
