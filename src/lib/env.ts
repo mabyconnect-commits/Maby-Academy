@@ -6,6 +6,8 @@ import { z } from "zod";
  */
 const schema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  /** Unpooled URL for migrations. Defaults to DATABASE_URL for local dev. */
+  DIRECT_DATABASE_URL: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   SESSION_SECRET: z
     .string()
@@ -16,6 +18,7 @@ const schema = z.object({
 
 const parsed = schema.safeParse({
   DATABASE_URL: process.env.DATABASE_URL,
+  DIRECT_DATABASE_URL: process.env.DIRECT_DATABASE_URL,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   SESSION_SECRET: process.env.SESSION_SECRET,
   SESSION_TTL_DAYS: process.env.SESSION_TTL_DAYS,

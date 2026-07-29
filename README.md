@@ -126,8 +126,9 @@ visible immediately.
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run db:migrate` | Create and apply a migration |
 | `npm run db:deploy` | Apply migrations (production) |
-| `npm run db:seed` | Seed demo data |
+| `npm run db:seed` | Seed demo data (blocked in production) |
 | `npm run db:studio` | Prisma Studio |
+| `npm run set-role -- <email> <ROLE>` | Promote a user to `INSTRUCTOR` or `ADMIN` |
 
 ---
 
@@ -163,13 +164,94 @@ apart in behaviour.
 
 ## Configuration
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `NEXT_PUBLIC_APP_URL` | Public origin — used in referral and certificate links |
-| `SESSION_SECRET` | 32+ chars; keys the HMAC over session tokens |
-| `SESSION_TTL_DAYS` | Session lifetime (default 30) |
-| `REFERRAL_COMMISSION_RATES` | Comma-separated decimals per level, e.g. `0.10,0.05,0.02`. The number of rates sets the depth of the tree. |
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | yes | PostgreSQL connection string used by the app. **Must be a pooled URL on serverless.** |
+| `DIRECT_DATABASE_URL` | migrations only | Unpooled URL. Only `prisma migrate` uses it; the app runs fine without it. |
+| `SESSION_SECRET` | yes | 32+ chars; keys the HMAC over session tokens |
+| `NEXT_PUBLIC_APP_URL` | yes | Public origin — printed on certificates and referral links |
+| `SESSION_TTL_DAYS` | no | Session lifetime (default 30) |
+| `REFERRAL_COMMISSION_RATES` | no | Comma-separated decimals per level, e.g. `0.10,0.05,0.02`. The number of rates sets the depth of the tree. |
+
+---
+
+## Deploying to Vercel
+
+### 1. Provision Postgres — with a pooler
+
+This is the one decision that will bite you if you get it wrong. Every Vercel
+serverless function instance opens its own database connection, so a plain
+Postgres instance runs out of connections under real traffic.
+
+Use a provider that gives you a **pooled** connection string:
+
+- **Neon** — integrates natively with Vercel, gives you both URLs
+- **Supabase** — use the `...-pooler...` host for `DATABASE_URL`
+- **Anything else** — put PgBouncer in front of it
+
+Set `DATABASE_URL` to the pooled URL and `DIRECT_DATABASE_URL` to the direct
+one. Locally they're the same value.
+
+### 2. Set environment variables
+
+In your Vercel project → Settings → Environment Variables:
+
+```
+DATABASE_URL              <pooled connection string>
+DIRECT_DATABASE_URL       <direct connection string>
+SESSION_SECRET            <openssl rand -base64 48>
+NEXT_PUBLIC_APP_URL       https://your-domain.com
+REFERRAL_COMMISSION_RATES 0.10,0.05,0.02
+```
+
+These must exist at **build** time, not just runtime — the app validates its
+configuration on import, so a deploy missing `SESSION_SECRET` fails the build
+with a clear message rather than shipping something that breaks on first
+request.
+
+Update `NEXT_PUBLIC_APP_URL` once your custom domain is attached. Certificates
+issued before that point will carry the old URL in their verification links.
+
+### 3. Deploy
+
+Import the repo in Vercel. Next.js is auto-detected, and the `vercel-build`
+script runs migrations before building:
+
+```
+prisma generate && prisma migrate deploy && next build
+```
+
+Point Vercel's function region at the same region as your database —
+a function in Washington talking to a database in Frankfurt adds a round trip
+to every query.
+
+### 4. Create your first admin
+
+The demo seed **refuses to run in production** — it creates accounts whose
+password is published in this repository. Instead:
+
+1. Register normally through the site at `/register`
+2. Promote yourself against the production database:
+
+```bash
+DATABASE_URL=<prod-url> npm run set-role -- you@yourdomain.com ADMIN
+```
+
+Then `/admin` is available to you, and you can promote instructors the same
+way.
+
+> If you deliberately want the demo data in a staging environment, set
+> `ALLOW_PRODUCTION_SEED=yes-i-am-sure`. Don't do this on production.
+
+### Deployment notes
+
+- **Preview deploys run migrations too.** `vercel-build` runs
+  `prisma migrate deploy` against whatever `DATABASE_URL` that environment
+  has. Give previews their own database, or switch the build command to plain
+  `npm run build` and run migrations yourself.
+- **Password hashing costs time.** bcrypt at 12 rounds takes a few hundred
+  milliseconds per login — normal, and deliberate.
+- **Session cookies** are automatically `secure` in production.
 
 ---
 

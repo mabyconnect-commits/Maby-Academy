@@ -26,7 +26,36 @@ function hmac(value: string) {
     .digest("hex");
 }
 
+/**
+ * This seed creates demo accounts whose password is written in plain text in
+ * this file and in the README. Running it against a live database would hand
+ * anyone who reads the repo an admin login, so it refuses to run in
+ * production unless someone very deliberately overrides it.
+ */
+function assertNotProduction() {
+  const forced = process.env.ALLOW_PRODUCTION_SEED === "yes-i-am-sure";
+  if (forced) {
+    console.warn("⚠ ALLOW_PRODUCTION_SEED set — seeding anyway.");
+    return;
+  }
+
+  const isProd =
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production";
+
+  if (isProd) {
+    console.error(
+      "\n✗ Refusing to seed: this looks like a production environment.\n" +
+        "  The seed creates demo accounts with a publicly known password.\n" +
+        "  If you genuinely want them, set ALLOW_PRODUCTION_SEED=yes-i-am-sure.\n",
+    );
+    process.exit(1);
+  }
+}
+
 async function main() {
+  assertNotProduction();
+
   console.log("→ Seeding Maby Academy…");
   const passwordHash = await bcrypt.hash(PASSWORD, 12);
 
