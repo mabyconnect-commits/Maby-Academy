@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Maby Academy — design tokens
+
+   One dark, premium surface scale plus a warm gold accent (the brand) and a
+   green "growth" accent used for progress, passes and money.
+   ========================================================================== */
+
+@theme {
+  --color-ink-950: #07090f;
+  --color-ink-900: #0b0f18;
+  --color-ink-850: #101623;
+  --color-ink-800: #151d2d;
+  --color-ink-700: #1d2739;
+  --color-ink-600: #2a3550;
+  --color-ink-500: #3d4a68;
+
+  --color-mist-400: #7c8aa8;
+  --color-mist-300: #9aa7c2;
+  --color-mist-200: #c3cddf;
+  --color-mist-100: #e6ebf5;
+
+  --color-gold-600: #b8862b;
+  --color-gold-500: #d9a441;
+  --color-gold-400: #eec46a;
+  --color-gold-300: #f6dfa6;
+
+  --color-growth-600: #14855f;
+  --color-growth-500: #1eb37f;
+  --color-growth-400: #45d3a0;
+
+  --color-flag-500: #e0574f;
+  --color-flag-400: #f47c74;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  --radius-card: 1rem;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1100px 600px at 12% -8%, rgba(217, 164, 65, 0.09), transparent 60%),
+    radial-gradient(900px 520px at 92% 4%, rgba(30, 179, 127, 0.08), transparent 58%),
+    var(--color-ink-950);
+  color: var(--color-mist-100);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-gold-500);
+  color: var(--color-ink-950);
+}
+
+/* Consistent, visible focus for keyboard users across every interactive
+   element — the default ring disappears against these dark surfaces. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-gold-400);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+@utility surface {
+  background-color: color-mix(in srgb, var(--color-ink-850) 88%, transparent);
+  border: 1px solid var(--color-ink-700);
+  border-radius: var(--radius-card);
+}
+
+@utility text-gradient-gold {
+  background: linear-gradient(
+    100deg,
+    var(--color-gold-300),
+    var(--color-gold-500) 55%,
+    var(--color-gold-300)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Long-form lesson bodies. Kept deliberately small — lesson content is
+   plain text with paragraph breaks, not arbitrary HTML. */
+.prose-lesson {
+  line-height: 1.75;
+  color: var(--color-mist-200);
+}
+.prose-lesson > * + * {
+  margin-top: 1rem;
+}
+.prose-lesson h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-mist-100);
+  margin-top: 2rem;
+}
+.prose-lesson h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-mist-100);
+  margin-top: 1.5rem;
+}
+.prose-lesson strong {
+  color: var(--color-gold-300);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

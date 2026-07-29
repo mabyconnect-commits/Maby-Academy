@@ -1,0 +1,763 @@
+// ---------------------------------------------------------------------------
+// Maby Academy — data model
+//
+// Covers: identity & access, the course tree, enrolment & progress,
+// assessment (assignments + quizzes) & grading, certification, live sessions,
+// the multi-level referral network, the rewards economy, notifications and
+// an immutable audit trail.
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================================================
+// Identity & access
+// ===========================================================================
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  role          Role      @default(STUDENT)
+  avatarUrl     String?
+  bio           String?
+  country       String?
+  timezone      String    @default("UTC")
+
+  emailVerifiedAt DateTime?
+  isActive        Boolean  @default(true)
+  lastLoginAt     DateTime?
+
+  // --- Referral network -------------------------------------------------
+  // Every member gets a code. `referredBy` forms the tree that
+  // ReferralCommission walks upward when a purchase happens.
+  referralCode String  @unique
+  referredById String?
+  referredBy   User?   @relation("ReferralTree", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals    User[]  @relation("ReferralTree")
+
+  // --- Rewards economy (denormalised running totals) ---------------------
+  pointsBalance  Int      @default(0)
+  lifetimePoints Int      @default(0)
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  lastActiveDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions            Session[]
+  verificationTokens  VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+
+  enrollments      Enrollment[]
+  lessonProgress   LessonProgress[]
+  submissions      Submission[]        @relation("SubmissionStudent")
+  gradedSubmissions Submission[]       @relation("SubmissionGrader")
+  quizAttempts     QuizAttempt[]
+  certificates     Certificate[]
+  reviews          CourseReview[]
+
+  taughtCourses    Course[]            @relation("CourseInstructor")
+  hostedSessions   LiveSession[]       @relation("LiveSessionHost")
+  rsvps            LiveSessionRsvp[]
+
+  pointsLedger        PointsTransaction[]
+  badges              UserBadge[]
+  earnedCommissions   ReferralCommission[] @relation("CommissionBeneficiary")
+  generatedCommissions ReferralCommission[] @relation("CommissionSource")
+  orders              Order[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+
+  @@index([referredById])
+  @@index([role])
+  @@map("users")
+}
+
+/// Server-side sessions. The raw token lives only in the user's cookie;
+/// the database stores a SHA-256 hash of it, so a database leak alone
+/// cannot be replayed as a login.
+model Session {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash      String   @unique
+  expiresAt      DateTime
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// ===========================================================================
+// Course tree
+// ===========================================================================
+
+/// The academy's pillars. Crypto and Web3 are the core, but Maby Academy is
+/// explicitly whole-person: faith, health and mindset are first-class.
+enum Pillar {
+  CRYPTO
+  WEB3
+  FINANCE
+  TRADING
+  ONCHAIN_ANALYSIS
+  BUSINESS
+  FAITH
+  HEALTH
+  MINDSET
+  LIFE_SKILLS
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  pillar      Pillar
+  description String?
+  iconEmoji   String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  courses Course[]
+
+  @@map("categories")
+}
+
+model Course {
+  id             String       @id @default(cuid())
+  title          String
+  slug           String       @unique
+  subtitle       String?
+  description    String
+  thumbnailUrl   String?
+  trailerUrl     String?
+  level          CourseLevel  @default(BEGINNER)
+  status         CourseStatus @default(DRAFT)
+
+  /// Price in minor units (kobo/cents). 0 = free.
+  priceMinor     Int          @default(0)
+  currency       String       @default("USD")
+
+  estimatedHours Int          @default(0)
+  /// Percentage of lessons that must be complete before a certificate issues.
+  passThreshold  Int          @default(80)
+
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id])
+  instructorId String
+  instructor   User     @relation("CourseInstructor", fields: [instructorId], references: [id])
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  modules      Module[]
+  enrollments  Enrollment[]
+  certificates Certificate[]
+  liveSessions LiveSession[]
+  reviews      CourseReview[]
+  orders       Order[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([instructorId])
+  @@map("courses")
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons Lesson[]
+
+  @@unique([courseId, sortOrder])
+  @@index([courseId])
+  @@map("modules")
+}
+
+enum LessonType {
+  VIDEO
+  TEXT
+  QUIZ
+  ASSIGNMENT
+  LIVE
+}
+
+model Lesson {
+  id        String     @id @default(cuid())
+  moduleId  String
+  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title     String
+  slug      String
+  type      LessonType @default(VIDEO)
+
+  /// Markdown body for TEXT lessons, or supporting notes for VIDEO lessons.
+  content       String?
+  videoUrl      String?
+  videoDuration Int?    @default(0) // seconds
+
+  sortOrder  Int     @default(0)
+  /// Free lessons are viewable without enrolment — the marketing hook.
+  isPreview  Boolean @default(false)
+  pointsValue Int    @default(10)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resources  LessonResource[]
+  progress   LessonProgress[]
+  assignment Assignment?
+  quiz       Quiz?
+
+  @@unique([moduleId, slug])
+  @@index([moduleId])
+  @@map("lessons")
+}
+
+model LessonResource {
+  id        String   @id @default(cuid())
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title     String
+  url       String
+  kind      String   @default("link") // link | pdf | sheet | repo
+  createdAt DateTime @default(now())
+
+  @@index([lessonId])
+  @@map("lesson_resources")
+}
+
+// ===========================================================================
+// Enrolment & progress
+// ===========================================================================
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+model Enrollment {
+  id       String           @id @default(cuid())
+  userId   String
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status   EnrollmentStatus @default(ACTIVE)
+
+  /// 0–100, recomputed whenever a lesson is completed.
+  progressPercent Int       @default(0)
+  enrolledAt      DateTime  @default(now())
+  completedAt     DateTime?
+  lastAccessedAt  DateTime?
+  /// Powers "resume where you left off".
+  lastLessonId    String?
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+model LessonProgress {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  isCompleted    Boolean   @default(false)
+  /// Furthest playback position in seconds, for video resume.
+  watchedSeconds Int       @default(0)
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+// ===========================================================================
+// Assessment & grading
+// ===========================================================================
+
+model Assignment {
+  id          String   @id @default(cuid())
+  lessonId    String   @unique
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title       String
+  instructions String
+  /// Rubric criteria as [{ name, description, maxPoints }].
+  rubric      Json?
+  maxScore    Int      @default(100)
+  passScore   Int      @default(60)
+  dueAt       DateTime?
+  allowsFile  Boolean  @default(true)
+  allowsText  Boolean  @default(true)
+  pointsValue Int      @default(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  submissions Submission[]
+
+  @@map("assignments")
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  GRADED
+  RETURNED
+}
+
+model Submission {
+  id           String           @id @default(cuid())
+  assignmentId String
+  assignment   Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User             @relation("SubmissionStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  status       SubmissionStatus @default(DRAFT)
+
+  textAnswer String?
+  fileUrl    String?
+  linkUrl    String?
+  attempt    Int     @default(1)
+
+  score       Int?
+  /// Per-criterion scores keyed by rubric criterion name.
+  rubricScores Json?
+  feedback    String?
+  graderId    String?
+  grader      User?     @relation("SubmissionGrader", fields: [graderId], references: [id], onDelete: SetNull)
+  gradedAt    DateTime?
+
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([assignmentId, studentId, attempt])
+  @@index([studentId])
+  @@index([assignmentId])
+  @@index([status])
+  @@map("submissions")
+}
+
+model Quiz {
+  id            String   @id @default(cuid())
+  lessonId      String   @unique
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  passScore     Int      @default(70) // percent
+  timeLimitMins Int?
+  maxAttempts   Int      @default(3)
+  shuffle       Boolean  @default(true)
+  pointsValue   Int      @default(30)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTI_CHOICE
+  TRUE_FALSE
+}
+
+model QuizQuestion {
+  id          String       @id @default(cuid())
+  quizId      String
+  quiz        Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  prompt      String
+  type        QuestionType @default(SINGLE_CHOICE)
+  explanation String?
+  points      Int          @default(1)
+  sortOrder   Int          @default(0)
+
+  options QuizOption[]
+  answers QuizAnswer[]
+
+  @@index([quizId])
+  @@map("quiz_questions")
+}
+
+model QuizOption {
+  id         String  @id @default(cuid())
+  questionId String
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String
+  isCorrect  Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  @@index([questionId])
+  @@map("quiz_options")
+}
+
+model QuizAttempt {
+  id          String    @id @default(cuid())
+  quizId      String
+  quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempt     Int       @default(1)
+  scorePercent Int      @default(0)
+  passed      Boolean   @default(false)
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+
+  answers QuizAnswer[]
+
+  @@unique([quizId, userId, attempt])
+  @@index([userId])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id                String   @id @default(cuid())
+  attemptId         String
+  attempt           QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId        String
+  question          QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOptionIds String[]
+  isCorrect         Boolean  @default(false)
+
+  @@unique([attemptId, questionId])
+  @@map("quiz_answers")
+}
+
+// ===========================================================================
+// Certification
+// ===========================================================================
+
+model Certificate {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  /// Human-facing certificate number, e.g. MABY-2026-000042.
+  serial       String @unique
+  /// Random public token used by /verify/[token] — safe to print on the PDF.
+  verifyToken  String @unique
+  finalScore   Int?
+  issuedAt     DateTime  @default(now())
+  revokedAt    DateTime?
+  revokeReason String?
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@map("certificates")
+}
+
+// ===========================================================================
+// Live sessions
+// ===========================================================================
+
+enum LiveSessionStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model LiveSession {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  hostId      String
+  host        User              @relation("LiveSessionHost", fields: [hostId], references: [id])
+  courseId    String?
+  course      Course?           @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  startsAt    DateTime
+  endsAt      DateTime
+  meetingUrl  String?
+  replayUrl   String?
+  status      LiveSessionStatus @default(SCHEDULED)
+  capacity    Int?
+  pointsValue Int               @default(20)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rsvps LiveSessionRsvp[]
+
+  @@index([startsAt])
+  @@index([courseId])
+  @@map("live_sessions")
+}
+
+model LiveSessionRsvp {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attended  Boolean     @default(false)
+  createdAt DateTime    @default(now())
+
+  @@unique([sessionId, userId])
+  @@index([userId])
+  @@map("live_session_rsvps")
+}
+
+// ===========================================================================
+// Commerce & multi-level referrals
+// ===========================================================================
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id       String      @id @default(cuid())
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course      @relation(fields: [courseId], references: [id])
+  amountMinor Int
+  currency String      @default("USD")
+  status   OrderStatus @default(PENDING)
+  provider String      @default("manual") // manual | stripe | paystack | crypto
+  providerRef String?
+  paidAt   DateTime?
+  createdAt DateTime   @default(now())
+
+  commissions ReferralCommission[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  VOID
+}
+
+/// One row per upline beneficiary per paid order. `level` is 1 for the direct
+/// referrer, 2 for their referrer, and so on up to the configured depth.
+model ReferralCommission {
+  id            String           @id @default(cuid())
+  orderId       String
+  order         Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  beneficiaryId String
+  beneficiary   User             @relation("CommissionBeneficiary", fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  sourceUserId  String
+  sourceUser    User             @relation("CommissionSource", fields: [sourceUserId], references: [id], onDelete: Cascade)
+
+  level       Int
+  ratePercent Int    // stored as basis-of-100, e.g. 10 = 10%
+  amountMinor Int
+  currency    String @default("USD")
+  status      CommissionStatus @default(PENDING)
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([orderId, beneficiaryId])
+  @@index([beneficiaryId])
+  @@index([status])
+  @@map("referral_commissions")
+}
+
+// ===========================================================================
+// Rewards economy
+// ===========================================================================
+
+enum PointsReason {
+  LESSON_COMPLETED
+  QUIZ_PASSED
+  ASSIGNMENT_GRADED
+  COURSE_COMPLETED
+  LIVE_ATTENDED
+  STREAK_BONUS
+  REFERRAL_SIGNUP
+  BADGE_AWARDED
+  MANUAL_ADJUSTMENT
+  REDEMPTION
+}
+
+/// Append-only ledger. `User.pointsBalance` is the denormalised sum and is
+/// only ever mutated inside the same transaction that appends here.
+model PointsTransaction {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int          // positive = credit, negative = debit
+  reason    PointsReason
+  /// Stable key that makes point awards idempotent, e.g. "lesson:<id>".
+  referenceKey String?
+  note      String?
+  createdAt DateTime     @default(now())
+
+  @@unique([userId, referenceKey])
+  @@index([userId])
+  @@map("points_transactions")
+}
+
+model Badge {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String
+  iconEmoji   String  @default("🏅")
+  pointsValue Int     @default(0)
+  /// Machine-readable unlock rule, e.g. { "type": "lessons_completed", "count": 10 }.
+  criteria    Json?
+  sortOrder   Int     @default(0)
+
+  users UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badges")
+}
+
+// ===========================================================================
+// Community & platform
+// ===========================================================================
+
+model CourseReview {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int      // 1–5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, userId])
+  @@index([courseId])
+  @@map("course_reviews")
+}
+
+enum NotificationType {
+  SYSTEM
+  COURSE
+  ASSIGNMENT
+  GRADE
+  CERTIFICATE
+  LIVE_SESSION
+  REFERRAL
+  REWARD
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(SYSTEM)
+  title     String
+  body      String
+  linkUrl   String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+/// Append-only record of privileged actions, for accountability.
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@map("audit_logs")
+}
