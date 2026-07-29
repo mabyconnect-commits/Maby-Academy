@@ -177,6 +177,10 @@ apart in behaviour.
 
 ## Deploying to Vercel
 
+> **[DEPLOYMENT.md](./DEPLOYMENT.md) is the step-by-step checklist** —
+> database setup, DNS, admin creation and troubleshooting. The summary below
+> is the short version.
+
 ### 1. Provision Postgres — with a pooler
 
 This is the one decision that will bite you if you get it wrong. Every Vercel

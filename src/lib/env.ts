@@ -8,7 +8,16 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   /** Unpooled URL for migrations. Defaults to DATABASE_URL for local dev. */
   DIRECT_DATABASE_URL: z.string().optional(),
-  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  /**
+   * Public origin. A trailing slash here would produce double-slashed
+   * certificate and referral links (".site//verify/..."), which look broken
+   * to anyone a student shares them with — so strip it once, here.
+   */
+  NEXT_PUBLIC_APP_URL: z
+    .string()
+    .url()
+    .default("http://localhost:3000")
+    .transform((url) => url.replace(/\/+$/, "")),
   SESSION_SECRET: z
     .string()
     .min(32, "SESSION_SECRET must be at least 32 characters"),
