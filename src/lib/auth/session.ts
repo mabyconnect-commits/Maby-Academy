@@ -5,6 +5,11 @@ import type { Role, User } from "@prisma/client";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { generateToken, hashToken } from "./tokens";
+import {
+  isStaffRole,
+  permissionsFor,
+  type PermissionKey,
+} from "./permissions";
 
 export const SESSION_COOKIE = "maby_session";
 
@@ -22,7 +27,10 @@ export type SessionUser = Pick<
   | "currentStreak"
   | "emailVerifiedAt"
   | "timezone"
->;
+> & {
+  /** Secondary roles, e.g. a student who also mentors. */
+  extraRoles: Role[];
+};
 
 const SESSION_SELECT = {
   id: true,
@@ -85,7 +93,13 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
     select: {
       id: true,
       expiresAt: true,
-      user: { select: { ...SESSION_SELECT, isActive: true } },
+      user: {
+        select: {
+          ...SESSION_SELECT,
+          isActive: true,
+          extraRoles: { select: { role: true } },
+        },
+      },
     },
   });
 
@@ -96,8 +110,8 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   }
   if (!session.user.isActive) return null;
 
-  const { isActive: _isActive, ...user } = session.user;
-  return user;
+  const { isActive: _isActive, extraRoles, ...user } = session.user;
+  return { ...user, extraRoles: extraRoles.map((r) => r.role) };
 });
 
 export async function destroySession() {
@@ -140,6 +154,43 @@ export async function requireRole(...roles: Role[]): Promise<SessionUser> {
   return user;
 }
 
+/**
+ * Preferred over `requireRole`: asks what the member may *do*, not what they
+ * are called, so re-bundling a capability never requires touching services.
+ *
+ * This is only half of an authorisation decision. Anything operating on a
+ * specific record must also confirm ownership — holding `submission:grade`
+ * says nothing about *whose* submission.
+ */
+export async function requirePermission(
+  permission: PermissionKey,
+): Promise<SessionUser> {
+  const user = await requireUser();
+  if (!userPermissions(user).has(permission)) {
+    throw new AuthError("You do not have access to this resource.", 403);
+  }
+  return user;
+}
+
+/** All roles a member holds: their primary role plus any secondary grants. */
+export function rolesOf(user: Pick<SessionUser, "role" | "extraRoles">): Role[] {
+  return [user.role, ...(user.extraRoles ?? [])];
+}
+
+export function userPermissions(
+  user: Pick<SessionUser, "role" | "extraRoles">,
+): Set<PermissionKey> {
+  return permissionsFor(rolesOf(user));
+}
+
+export function can(
+  user: Pick<SessionUser, "role" | "extraRoles">,
+  permission: PermissionKey,
+): boolean {
+  return userPermissions(user).has(permission);
+}
+
+/** Whether the member may reach the instructor/admin area at all. */
 export function isStaff(role: Role) {
-  return role === "ADMIN" || role === "INSTRUCTOR";
+  return isStaffRole(role);
 }

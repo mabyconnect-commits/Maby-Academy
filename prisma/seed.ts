@@ -6,7 +6,11 @@
  *
  * Safe to re-run: everything upserts on a natural key.
  */
-import { PrismaClient, type Prisma } from "@prisma/client";
+import { PrismaClient, type Prisma, type Role } from "@prisma/client";
+import {
+  PERMISSIONS,
+  ROLE_PERMISSION_MAP,
+} from "../src/lib/auth/permissions";
 import bcrypt from "bcryptjs";
 import { randomBytes, createHmac } from "node:crypto";
 
@@ -1051,6 +1055,377 @@ async function main() {
     });
   }
   console.log("  ✓ points, streaks, badges and notifications");
+
+  // -------------------------------------------------------------------
+  // Permission catalogue + role bundles
+  // -------------------------------------------------------------------
+  for (const [key, description] of Object.entries(PERMISSIONS)) {
+    await db.permission.upsert({
+      where: { key },
+      create: { key, description, domain: key.split(":")[0] },
+      update: { description, domain: key.split(":")[0] },
+    });
+  }
+
+  const permissionRows = await db.permission.findMany({
+    select: { id: true, key: true },
+  });
+  const permissionId = new Map(permissionRows.map((p) => [p.key, p.id]));
+
+  for (const [role, keys] of Object.entries(ROLE_PERMISSION_MAP)) {
+    for (const key of keys) {
+      const id = permissionId.get(key);
+      if (!id) continue;
+      await db.rolePermission.upsert({
+        where: {
+          role_permissionId: { role: role as Role, permissionId: id },
+        },
+        create: { role: role as Role, permissionId: id },
+        update: {},
+      });
+    }
+  }
+  console.log(
+    `  ✓ ${Object.keys(PERMISSIONS).length} permissions across ${Object.keys(ROLE_PERMISSION_MAP).length} roles`,
+  );
+
+  // -------------------------------------------------------------------
+  // Schools and programmes
+  // -------------------------------------------------------------------
+  const schoolSeed = [
+    {
+      name: "School of Crypto Foundations",
+      slug: "school-of-crypto-foundations",
+      pillar: "CRYPTO" as const,
+      iconEmoji: "₿",
+      tagline: "Own your keys before you own anything else.",
+      description:
+        "Where every member starts. Wallets, self-custody, transaction literacy and the scam patterns that catch almost everyone once.",
+      sortOrder: 1,
+      courses: ["crypto-from-zero"],
+    },
+    {
+      name: "School of On-Chain Analysis",
+      slug: "school-of-on-chain-analysis",
+      pillar: "ONCHAIN_ANALYSIS" as const,
+      iconEmoji: "🔍",
+      tagline: "Stop taking someone else's word for it.",
+      description:
+        "Read the chain yourself: wallet clustering, flow analysis, protocol revenue and the discipline to argue against your own thesis.",
+      sortOrder: 2,
+      courses: ["reading-the-chain"],
+    },
+    {
+      name: "School of Trading and Risk",
+      slug: "school-of-trading-and-risk",
+      pillar: "TRADING" as const,
+      iconEmoji: "📈",
+      tagline: "Survive first. Everything else is downstream.",
+      description:
+        "Position sizing, drawdown maths, journalling and the psychology that separates a trader from a gambler.",
+      sortOrder: 3,
+      courses: ["risk-first-trading"],
+    },
+    {
+      name: "School of Faith and Purpose",
+      slug: "school-of-faith-and-purpose",
+      pillar: "FAITH" as const,
+      iconEmoji: "🙏",
+      tagline: "Character before capital.",
+      description:
+        "Stewardship, integrity, health and the definition of 'enough' — the foundation that makes wealth worth holding.",
+      sortOrder: 4,
+      courses: ["built-to-last"],
+    },
+  ];
+
+  for (const s of schoolSeed) {
+    const school = await db.school.upsert({
+      where: { slug: s.slug },
+      create: {
+        name: s.name,
+        slug: s.slug,
+        pillar: s.pillar,
+        iconEmoji: s.iconEmoji,
+        tagline: s.tagline,
+        description: s.description,
+        sortOrder: s.sortOrder,
+      },
+      update: { tagline: s.tagline, description: s.description },
+    });
+
+    // Attach existing courses to their school.
+    for (const courseSlug of s.courses) {
+      const id = courseIds[courseSlug];
+      if (id) {
+        await db.course.update({
+          where: { id },
+          data: { schoolId: school.id },
+        });
+      }
+    }
+  }
+  console.log(`  ✓ ${schoolSeed.length} schools`);
+
+  // A flagship programme spanning two schools, to exercise the join model.
+  const foundationsSchool = await db.school.findUniqueOrThrow({
+    where: { slug: "school-of-crypto-foundations" },
+  });
+
+  const programme = await db.programme.upsert({
+    where: { slug: "web3-analyst-pathway" },
+    create: {
+      schoolId: foundationsSchool.id,
+      title: "Web3 Analyst Pathway",
+      slug: "web3-analyst-pathway",
+      subtitle:
+        "From never having held a wallet to defending an on-chain thesis in public.",
+      description:
+        "A structured route through the two courses that matter most for anyone who wants to research Web3 seriously rather than follow calls.\n\nYou start by taking custody of your own funds and understanding what a transaction actually is. You finish by producing a full protocol teardown — with a mandatory bear case — that an instructor grades against a rubric.",
+      outcomes: [
+        "Set up and independently verify self-custody",
+        "Read and explain any on-chain transaction",
+        "Assess whether a protocol has real usage or rented activity",
+        "Produce a sourced, reproducible research teardown",
+        "Argue the strongest case against your own conclusion",
+      ],
+      level: "INTERMEDIATE",
+      status: "PUBLISHED",
+      estimatedWeeks: 10,
+      publishedAt: new Date(),
+    },
+    update: { status: "PUBLISHED" },
+  });
+
+  const pathwayCourses = ["crypto-from-zero", "reading-the-chain"];
+  for (const [i, slug] of pathwayCourses.entries()) {
+    const courseId = courseIds[slug];
+    if (!courseId) continue;
+    await db.programmeCourse.upsert({
+      where: { programmeId_courseId: { programmeId: programme.id, courseId } },
+      create: { programmeId: programme.id, courseId, sortOrder: i },
+      update: { sortOrder: i },
+    });
+  }
+  console.log("  ✓ 1 programme with ordered courses");
+
+  // -------------------------------------------------------------------
+  // Communities
+  // -------------------------------------------------------------------
+  const academyCommunity = await db.community.upsert({
+    where: { slug: "the-commons" },
+    create: {
+      name: "The Commons",
+      slug: "the-commons",
+      description:
+        "The academy-wide room. Introductions, wins, questions and accountability.",
+      scope: "ACADEMY",
+      guidelines:
+        "Be useful or be quiet. No shilling, no price calls, no referral spam. Ask real questions and answer them properly.",
+    },
+    update: {},
+  });
+
+  const everyone = [mabi.id, ...Object.values(students)];
+  for (const userId of everyone) {
+    await db.communityMember.upsert({
+      where: {
+        communityId_userId: { communityId: academyCommunity.id, userId },
+      },
+      create: {
+        communityId: academyCommunity.id,
+        userId,
+        role: userId === mabi.id ? "MODERATOR" : "MEMBER",
+      },
+      update: {},
+    });
+  }
+
+  const existingPost = await db.post.findFirst({
+    where: { communityId: academyCommunity.id },
+  });
+  if (!existingPost) {
+    const welcome = await db.post.create({
+      data: {
+        communityId: academyCommunity.id,
+        authorId: mabi.id,
+        type: "ANNOUNCEMENT",
+        title: "Read this first",
+        body: "Welcome. Three things before you start.\n\nOne: do the assignments. The videos are the easy part — the work is where it becomes yours.\n\nTwo: nothing taught here is financial advice, and nobody here will ever ask for your seed phrase. Not me, not an instructor, not a moderator. Anyone who does is not from this academy.\n\nThree: post when you're stuck. Someone here has been stuck on the same thing.",
+        isPinned: true,
+        tags: ["start-here"],
+      },
+    });
+
+    await db.comment.create({
+      data: {
+        postId: welcome.id,
+        authorId: students["tobi@example.com"],
+        body: "The wallet restore assignment was the most useful thing I've done all year. I found an old seed phrase screenshot in my photos and deleted it.",
+      },
+    });
+    await db.post.update({
+      where: { id: welcome.id },
+      data: { commentCount: 1 },
+    });
+  }
+  console.log("  ✓ community with pinned announcement");
+
+  // -------------------------------------------------------------------
+  // Growth: habits and goals for one student
+  // -------------------------------------------------------------------
+  const growthUser = students["tobi@example.com"];
+  const habitSeed = [
+    { name: "Complete one lesson", area: "LEARNING" as const, icon: "📚" },
+    { name: "Devotional and prayer", area: "FAITH" as const, icon: "🙏" },
+    { name: "Move for 30 minutes", area: "HEALTH" as const, icon: "💪" },
+    { name: "Review the trading journal", area: "FINANCE" as const, icon: "📈" },
+  ];
+  for (const [i, h] of habitSeed.entries()) {
+    const existing = await db.habit.findFirst({
+      where: { userId: growthUser, name: h.name },
+    });
+    if (!existing) {
+      await db.habit.create({
+        data: {
+          userId: growthUser,
+          name: h.name,
+          area: h.area,
+          iconEmoji: h.icon,
+          sortOrder: i,
+          currentStreak: 4,
+          longestStreak: 11,
+        },
+      });
+    }
+  }
+
+  const existingGoal = await db.goal.findFirst({ where: { userId: growthUser } });
+  if (!existingGoal) {
+    await db.goal.createMany({
+      data: [
+        {
+          userId: growthUser,
+          title: "Finish the Web3 Analyst Pathway",
+          area: "LEARNING",
+          horizon: "QUARTERLY",
+          targetValue: 100,
+          currentValue: 62,
+          unit: "%",
+        },
+        {
+          userId: growthUser,
+          title: "Build three months of living expenses in stablecoins",
+          area: "FINANCE",
+          horizon: "ANNUAL",
+          targetValue: 3,
+          currentValue: 1,
+          unit: "months",
+        },
+      ],
+    });
+  }
+  console.log("  ✓ habits and goals");
+
+  // -------------------------------------------------------------------
+  // Plans
+  // -------------------------------------------------------------------
+  const planSeed = [
+    {
+      name: "Member",
+      slug: "member",
+      priceMinor: 0,
+      interval: "MONTHLY" as const,
+      sortOrder: 1,
+      description: "Start free. Free courses, the community, and your dashboard.",
+      features: [
+        "All free courses",
+        "The Commons community",
+        "Progress tracking and streaks",
+        "Certificates on free courses",
+      ],
+    },
+    {
+      name: "Scholar",
+      slug: "scholar",
+      priceMinor: 2900,
+      interval: "MONTHLY" as const,
+      sortOrder: 2,
+      description: "The full curriculum, graded assignments and live sessions.",
+      features: [
+        "Every course and programme",
+        "Graded assignments with instructor feedback",
+        "Live sessions and replays",
+        "Verifiable certificates",
+        "Referral commissions",
+      ],
+    },
+    {
+      name: "Fellow",
+      slug: "fellow",
+      priceMinor: 9900,
+      interval: "MONTHLY" as const,
+      sortOrder: 3,
+      description: "Everything in Scholar, plus a mentor and cohort seat.",
+      features: [
+        "Everything in Scholar",
+        "Assigned mentor and monthly one-to-one",
+        "Cohort seat with a dated start and finish",
+        "Priority assignment review",
+        "Capstone project supervision",
+      ],
+    },
+  ];
+  for (const p of planSeed) {
+    await db.plan.upsert({
+      where: { slug: p.slug },
+      create: p,
+      update: { priceMinor: p.priceMinor, features: p.features },
+    });
+  }
+  console.log(`  ✓ ${planSeed.length} plans`);
+
+  // -------------------------------------------------------------------
+  // Feature flags — risky capabilities ship dark
+  // -------------------------------------------------------------------
+  const flagSeed = [
+    {
+      key: "referral_commissions",
+      description:
+        "Multi-level referral commissions. Must stay off until compliance review — payouts have to be tied to genuine purchases, never recruitment.",
+      isEnabled: false,
+    },
+    {
+      key: "token_rewards",
+      description:
+        "Any crypto or cash-value reward. Off until legal review in every operating region.",
+      isEnabled: false,
+    },
+    {
+      key: "ai_assistant",
+      description:
+        "AI learning assistant. Off until provider, data handling and labelling are settled.",
+      isEnabled: false,
+    },
+    {
+      key: "community",
+      description: "Community posts, comments and moderation.",
+      isEnabled: true,
+    },
+    {
+      key: "growth_centre",
+      description: "Habits, goals and private journals.",
+      isEnabled: true,
+    },
+  ];
+  for (const f of flagSeed) {
+    await db.featureFlag.upsert({
+      where: { key: f.key },
+      create: f,
+      update: { description: f.description },
+    });
+  }
+  console.log(`  ✓ ${flagSeed.length} feature flags (risky ones off by default)`);
 
   // Silence the unused-helper warning while keeping hmac available for
   // anyone extending the seed with pre-signed tokens.

@@ -28,10 +28,59 @@ datasource db {
 // Identity & access
 // ===========================================================================
 
+/// Roles are additive labels, not a strict hierarchy — FINANCE is not "more
+/// than" INSTRUCTOR, it is different. `User.role` remains the primary role;
+/// additional roles are granted through UserRole.
 enum Role {
   STUDENT
+  MENTOR
   INSTRUCTOR
+  REVIEWER
+  MODERATOR
+  SUPPORT
+  FINANCE
   ADMIN
+  SUPER_ADMIN
+}
+
+/// A named capability, e.g. "submission:grade". Roles are bundles of these,
+/// so a capability can move between roles without an application change.
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String
+  domain      String
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@index([domain])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  role         Role
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+  @@index([role])
+  @@map("role_permissions")
+}
+
+/// Secondary roles. A user may mentor while also being a student.
+model UserRole {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role
+  grantedById String?
+  grantedAt  DateTime @default(now())
+
+  @@unique([userId, role])
+  @@index([userId])
+  @@map("user_roles")
 }
 
 model User {
@@ -82,6 +131,37 @@ model User {
   taughtCourses    Course[]            @relation("CourseInstructor")
   hostedSessions   LiveSession[]       @relation("LiveSessionHost")
   rsvps            LiveSessionRsvp[]
+
+  extraRoles          UserRole[]
+  onboarding          OnboardingProfile?
+
+  cohortMemberships   CohortMember[]
+  mentorAssignments   MentorAssignment[]  @relation("MentorOf")
+  menteeAssignments   MentorAssignment[]  @relation("MenteeOf")
+  mentorSessions      MentorSession[]     @relation("SessionMentor")
+  menteeSessions      MentorSession[]     @relation("SessionMentee")
+
+  communityMemberships CommunityMember[]
+  posts               Post[]
+  comments            Comment[]
+  reactions           Reaction[]
+  reportsFiled        Report[]            @relation("ReportReporter")
+  reportsResolved     Report[]            @relation("ReportResolver")
+
+  habits              Habit[]
+  goals               Goal[]
+  journalEntries      JournalEntry[]
+
+  subscriptions       Subscription[]
+  invoices            Invoice[]
+  scholarships        Scholarship[]
+
+  ticketsOpened       SupportTicket[]     @relation("TicketRequester")
+  ticketsAssigned     SupportTicket[]     @relation("TicketAgent")
+  ticketMessages      SupportMessage[]
+
+  lessonNotes         LessonNote[]
+  savedLessons        SavedLesson[]
 
   pointsLedger        PointsTransaction[]
   badges              UserBadge[]
@@ -187,8 +267,123 @@ model Category {
   @@map("categories")
 }
 
+/// Academy → School → Programme → Course → Module → Lesson.
+/// A School is a faculty ("School of On-Chain Analysis"); a Programme is a
+/// structured path through several courses ending in a credential.
+model School {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  tagline     String?
+  description String
+  pillar      Pillar
+  iconEmoji   String?
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  programmes Programme[]
+  courses    Course[]
+
+  @@map("schools")
+}
+
+enum ProgrammeStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Programme {
+  id          String          @id @default(cuid())
+  schoolId    String
+  school      School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title       String
+  slug        String          @unique
+  subtitle    String?
+  description String
+  outcomes    Json?           // string[] of learning outcomes
+  level       CourseLevel     @default(BEGINNER)
+  status      ProgrammeStatus @default(DRAFT)
+  priceMinor  Int             @default(0)
+  currency    String          @default("USD")
+  estimatedWeeks Int          @default(0)
+  /// Percentage of member courses required for the programme credential.
+  passThreshold  Int          @default(80)
+  sortOrder   Int             @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  courses ProgrammeCourse[]
+  cohorts Cohort[]
+
+  @@index([schoolId])
+  @@index([status])
+  @@map("programmes")
+}
+
+/// Join table: a course can belong to several programmes, ordered per
+/// programme, and may be optional within one and required in another.
+model ProgrammeCourse {
+  id          String    @id @default(cuid())
+  programmeId String
+  programme   Programme @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sortOrder   Int       @default(0)
+  isRequired  Boolean   @default(true)
+
+  @@unique([programmeId, courseId])
+  @@index([courseId])
+  @@map("programme_courses")
+}
+
+enum CohortStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+/// A dated group moving through a programme together.
+model Cohort {
+  id          String       @id @default(cuid())
+  programmeId String
+  programme   Programme    @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String       @unique
+  startsAt    DateTime
+  endsAt      DateTime?
+  capacity    Int?
+  status      CohortStatus @default(UPCOMING)
+  createdAt   DateTime     @default(now())
+
+  members     CohortMember[]
+  communities Community[]
+
+  @@index([programmeId])
+  @@map("cohorts")
+}
+
+model CohortMember {
+  id       String   @id @default(cuid())
+  cohortId String
+  cohort   Cohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  @@unique([cohortId, userId])
+  @@index([userId])
+  @@map("cohort_members")
+}
+
 model Course {
   id             String       @id @default(cuid())
+  schoolId       String?
+  school         School?      @relation(fields: [schoolId], references: [id], onDelete: SetNull)
   title          String
   slug           String       @unique
   subtitle       String?
@@ -221,6 +416,8 @@ model Course {
   liveSessions LiveSession[]
   reviews      CourseReview[]
   orders       Order[]
+  programmes   ProgrammeCourse[]
+  communities  Community[]
 
   @@index([status])
   @@index([categoryId])
@@ -278,6 +475,8 @@ model Lesson {
   progress   LessonProgress[]
   assignment Assignment?
   quiz       Quiz?
+  notes      LessonNote[]
+  savedBy    SavedLesson[]
 
   @@unique([moduleId, slug])
   @@index([moduleId])
@@ -606,6 +805,7 @@ model Order {
   createdAt DateTime   @default(now())
 
   commissions ReferralCommission[]
+  invoices    Invoice[]
 
   @@index([userId])
   @@index([status])
@@ -768,4 +968,681 @@ model AuditLog {
   @@index([userId])
   @@index([action])
   @@map("audit_logs")
+}
+
+// ===========================================================================
+// Onboarding
+// ===========================================================================
+
+/// Captured once after registration and used to generate a personalised
+/// learning pathway. Answers are stored as structured JSON so the
+/// questionnaire can evolve without a migration per question.
+model OnboardingProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  knowledgeLevel    String?  // beginner | intermediate | advanced
+  cryptoExperience  String?
+  primaryGoals      String[] // e.g. ["financial_independence", "career"]
+  interests         String[] // pillar slugs
+  weeklyHours       Int?
+  learningStyle     String?
+  /// Faith and health content are strictly opt-in.
+  wantsFaithContent  Boolean @default(false)
+  wantsHealthContent Boolean @default(false)
+  wantsMentor        Boolean @default(false)
+  answers           Json?
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("onboarding_profiles")
+}
+
+// ===========================================================================
+// Mentorship
+// ===========================================================================
+
+model MentorAssignment {
+  id        String    @id @default(cuid())
+  mentorId  String
+  mentor    User      @relation("MentorOf", fields: [mentorId], references: [id], onDelete: Cascade)
+  menteeId  String
+  mentee    User      @relation("MenteeOf", fields: [menteeId], references: [id], onDelete: Cascade)
+  /// Journals stay private unless the mentee explicitly opts in, per the
+  /// privacy boundary in docs/ROLES.md. Revocable at any time.
+  journalConsent Boolean @default(false)
+  isActive  Boolean   @default(true)
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  sessions MentorSession[]
+
+  @@unique([mentorId, menteeId])
+  @@index([menteeId])
+  @@map("mentor_assignments")
+}
+
+enum MentorSessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model MentorSession {
+  id           String              @id @default(cuid())
+  assignmentId String
+  assignment   MentorAssignment    @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  mentorId     String
+  mentor       User                @relation("SessionMentor", fields: [mentorId], references: [id], onDelete: Cascade)
+  menteeId     String
+  mentee       User                @relation("SessionMentee", fields: [menteeId], references: [id], onDelete: Cascade)
+  scheduledAt  DateTime
+  durationMins Int                 @default(30)
+  meetingUrl   String?
+  status       MentorSessionStatus @default(SCHEDULED)
+  /// Visible to the mentee.
+  sharedNotes  String?
+  /// Mentor-only working notes.
+  privateNotes String?
+  createdAt    DateTime            @default(now())
+
+  @@index([mentorId])
+  @@index([menteeId])
+  @@map("mentor_sessions")
+}
+
+// ===========================================================================
+// Community
+// ===========================================================================
+
+enum CommunityScope {
+  ACADEMY
+  SCHOOL
+  COURSE
+  COHORT
+  PRIVATE
+}
+
+model Community {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  description String?
+  scope       CommunityScope @default(ACADEMY)
+  courseId    String?
+  course      Course?        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  cohortId    String?
+  cohort      Cohort?        @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  isPublic    Boolean        @default(true)
+  guidelines  String?
+  createdAt   DateTime       @default(now())
+
+  members CommunityMember[]
+  posts   Post[]
+
+  @@index([scope])
+  @@map("communities")
+}
+
+enum CommunityRole {
+  MEMBER
+  CONTRIBUTOR
+  MODERATOR
+}
+
+model CommunityMember {
+  id          String        @id @default(cuid())
+  communityId String
+  community   Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        CommunityRole @default(MEMBER)
+  isMuted     Boolean       @default(false)
+  joinedAt    DateTime      @default(now())
+
+  @@unique([communityId, userId])
+  @@index([userId])
+  @@map("community_members")
+}
+
+enum PostType {
+  DISCUSSION
+  QUESTION
+  ANNOUNCEMENT
+  POLL
+  RESOURCE
+}
+
+enum ModerationStatus {
+  VISIBLE
+  FLAGGED
+  HIDDEN
+  REMOVED
+}
+
+model Post {
+  id          String           @id @default(cuid())
+  communityId String
+  community   Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  type        PostType         @default(DISCUSSION)
+  title       String?
+  body        String
+  attachments Json?
+  tags        String[]
+  isPinned    Boolean          @default(false)
+  isLocked    Boolean          @default(false)
+  status      ModerationStatus @default(VISIBLE)
+  /// Denormalised counters, updated in the same transaction as the row they
+  /// count, so a busy thread never needs an aggregate query to render.
+  commentCount  Int            @default(0)
+  reactionCount Int            @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  comments  Comment[]
+  reactions Reaction[]
+  reports   Report[]
+
+  @@index([communityId, createdAt])
+  @@index([authorId])
+  @@map("posts")
+}
+
+model Comment {
+  id        String           @id @default(cuid())
+  postId    String
+  post      Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  /// Self-relation gives one level of threading without a nested-set table.
+  parentId  String?
+  parent    Comment?         @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]        @relation("CommentThread")
+  body      String
+  isAnswer  Boolean          @default(false)
+  status    ModerationStatus @default(VISIBLE)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  reactions Reaction[]
+  reports   Report[]
+
+  @@index([postId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+enum ReactionType {
+  LIKE
+  CELEBRATE
+  INSIGHTFUL
+  SUPPORT
+}
+
+model Reaction {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now())
+
+  @@unique([userId, postId, commentId])
+  @@index([postId])
+  @@map("reactions")
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  ACTIONED
+  DISMISSED
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  reporterId  String
+  reporter    User         @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  postId      String?
+  post        Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId   String?
+  comment     Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reason      String
+  details     String?
+  status      ReportStatus @default(OPEN)
+  resolvedById String?
+  resolvedBy  User?        @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolution  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@index([status])
+  @@map("reports")
+}
+
+// ===========================================================================
+// Personal growth — private by default
+// ===========================================================================
+
+enum GrowthArea {
+  FAITH
+  FINANCE
+  HEALTH
+  CAREER
+  BUSINESS
+  LEARNING
+  PRODUCTIVITY
+  LEADERSHIP
+  RELATIONSHIPS
+  PURPOSE
+}
+
+enum HabitCadence {
+  DAILY
+  WEEKLY
+}
+
+model Habit {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  area          GrowthArea   @default(LEARNING)
+  cadence       HabitCadence @default(DAILY)
+  /// For weekly habits: how many times per week counts as met.
+  targetPerWeek Int          @default(7)
+  iconEmoji     String?
+  isActive      Boolean      @default(true)
+  currentStreak Int          @default(0)
+  longestStreak Int          @default(0)
+  sortOrder     Int          @default(0)
+  createdAt     DateTime     @default(now())
+
+  entries HabitEntry[]
+
+  @@index([userId])
+  @@map("habits")
+}
+
+model HabitEntry {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  /// Date only (UTC midnight) so one entry per habit per day is enforceable.
+  entryDate DateTime
+  completed Boolean  @default(true)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, entryDate])
+  @@index([habitId])
+  @@map("habit_entries")
+}
+
+enum GoalHorizon {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum GoalStatus {
+  ACTIVE
+  ACHIEVED
+  MISSED
+  ABANDONED
+}
+
+model Goal {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  area         GrowthArea  @default(LEARNING)
+  horizon      GoalHorizon @default(WEEKLY)
+  targetValue  Int?
+  currentValue Int         @default(0)
+  unit         String?
+  dueAt        DateTime?
+  status       GoalStatus  @default(ACTIVE)
+  /// Off by default — a goal is only visible to a mentor if the member says so.
+  sharedWithMentor Boolean @default(false)
+  completedAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([userId, status])
+  @@map("goals")
+}
+
+enum JournalKind {
+  REFLECTION
+  GRATITUDE
+  PRAYER
+  LESSON_NOTE
+  REVIEW
+}
+
+/// Private by default and never surfaced to staff. A journal nobody trusts is
+/// a journal nobody writes in.
+model JournalEntry {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      JournalKind @default(REFLECTION)
+  area      GrowthArea?
+  title     String?
+  body      String
+  mood      Int?        // 1–5, optional self-report
+  isPrivate Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+  @@map("journal_entries")
+}
+
+// ===========================================================================
+// Lesson notes & saves
+// ===========================================================================
+
+model LessonNote {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId      String
+  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  body          String
+  /// Timestamp in the lesson video this note anchors to, if any.
+  videoSeconds  Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, lessonId])
+  @@map("lesson_notes")
+}
+
+model SavedLesson {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId String
+  lesson   Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  savedAt  DateTime @default(now())
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@map("saved_lessons")
+}
+
+// ===========================================================================
+// Commerce — plans, subscriptions, invoices, coupons, scholarships
+// ===========================================================================
+
+enum BillingInterval {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  LIFETIME
+}
+
+model Plan {
+  id           String          @id @default(cuid())
+  name         String
+  slug         String          @unique
+  description  String?
+  priceMinor   Int
+  currency     String          @default("USD")
+  interval     BillingInterval @default(MONTHLY)
+  trialDays    Int             @default(0)
+  features     String[]
+  isActive     Boolean         @default(true)
+  sortOrder    Int             @default(0)
+  createdAt    DateTime        @default(now())
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               Plan               @relation(fields: [planId], references: [id])
+  status             SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  cancelledAt        DateTime?
+  provider           String             @default("manual")
+  providerRef        String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  invoices Invoice[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+  REFUNDED
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  number         String        @unique
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  orderId        String?
+  order          Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  subtotalMinor  Int
+  discountMinor  Int           @default(0)
+  taxMinor       Int           @default(0)
+  totalMinor     Int
+  currency       String        @default("USD")
+  status         InvoiceStatus @default(OPEN)
+  issuedAt       DateTime      @default(now())
+  paidAt         DateTime?
+  dueAt          DateTime?
+
+  refunds Refund[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("invoices")
+}
+
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+model Refund {
+  id          String       @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amountMinor Int
+  currency    String       @default("USD")
+  reason      String
+  status      RefundStatus @default(REQUESTED)
+  decidedById String?
+  decidedAt   DateTime?
+  note        String?
+  createdAt   DateTime     @default(now())
+
+  @@index([status])
+  @@map("refunds")
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+model Coupon {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  description   String?
+  discountType  DiscountType @default(PERCENT)
+  /// Percent (1–100) or minor units, depending on discountType.
+  discountValue Int
+  currency      String?
+  maxRedemptions Int?
+  timesRedeemed Int          @default(0)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+
+  @@map("coupons")
+}
+
+enum ScholarshipStatus {
+  APPLIED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model Scholarship {
+  id           String            @id @default(cuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programmeId  String?
+  reason       String
+  status       ScholarshipStatus @default(APPLIED)
+  coveragePercent Int            @default(100)
+  decidedById  String?
+  decidedAt    DateTime?
+  note         String?
+  createdAt    DateTime          @default(now())
+
+  @@index([userId])
+  @@index([status])
+  @@map("scholarships")
+}
+
+// ===========================================================================
+// Support
+// ===========================================================================
+
+enum TicketStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model SupportTicket {
+  id          String         @id @default(cuid())
+  reference   String         @unique
+  requesterId String
+  requester   User           @relation("TicketRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  agentId     String?
+  agent       User?          @relation("TicketAgent", fields: [agentId], references: [id], onDelete: SetNull)
+  category    String
+  subject     String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(NORMAL)
+  satisfaction Int?          // 1–5, set by the requester on close
+  firstRespondedAt DateTime?
+  resolvedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  messages SupportMessage[]
+
+  @@index([status])
+  @@index([requesterId])
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  /// Internal notes are never shown to the requester.
+  isInternal Boolean      @default(false)
+  attachments Json?
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId])
+  @@map("support_messages")
+}
+
+// ===========================================================================
+// Platform
+// ===========================================================================
+
+/// Lets risky or unreviewed capabilities ship dark and be enabled per
+/// environment — the mechanism the compliance gates in docs/ROADMAP.md rely on.
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String
+  isEnabled   Boolean  @default(false)
+  /// Optional percentage rollout, 0–100.
+  rolloutPercent Int   @default(0)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("feature_flags")
+}
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  inAppEnabled  Boolean @default(true)
+  emailEnabled  Boolean @default(true)
+  pushEnabled   Boolean @default(false)
+  smsEnabled    Boolean @default(false)
+  /// Per-type opt-outs, e.g. { "COURSE": false }. Security notifications are
+  /// never disableable and are ignored here.
+  mutedTypes    Json?
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_preferences")
 }
