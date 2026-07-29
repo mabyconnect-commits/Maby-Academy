@@ -64,13 +64,13 @@ In the import screen (or later under **Settings → Environment Variables**),
 add these. Tick **Production**, **Preview** and **Development** for each
 unless noted.
 
-| Name | Value |
-| --- | --- |
-| `DATABASE_URL` | Neon **pooled** string (the one with `-pooler`) |
-| `DIRECT_DATABASE_URL` | Neon **direct** string (no `-pooler`) |
-| `SESSION_SECRET` | The 64-character random string generated for you — never commit it |
-| `NEXT_PUBLIC_APP_URL` | `https://mabyacademy.site` |
-| `REFERRAL_COMMISSION_RATES` | `0.10,0.05,0.02` |
+| Name | Required | Value |
+| --- | --- | --- |
+| `DATABASE_URL` | **yes** | Neon **pooled** string (the one with `-pooler`) |
+| `SESSION_SECRET` | **yes** | The 64-character random string generated for you — never commit it |
+| `NEXT_PUBLIC_APP_URL` | **yes** | `https://mabyacademy.site` |
+| `DIRECT_DATABASE_URL` | recommended | Neon **direct** string (no `-pooler`). If omitted, migrations reuse `DATABASE_URL`. |
+| `REFERRAL_COMMISSION_RATES` | no | `0.10,0.05,0.02` (this is the default) |
 
 `SESSION_TTL_DAYS` is optional and defaults to 30.
 
@@ -210,7 +210,8 @@ own Neon branch, or scope `DATABASE_URL` to Production only.
 | --- | --- | --- |
 | `Invalid environment configuration: SESSION_SECRET: Required` | Variable missing at build time | Add it in Settings → Environment Variables, redeploy |
 | `Can't reach database server` | Wrong or unreachable connection string | Re-copy from Neon; keep `?sslmode=require` |
-| `prisma migrate deploy` hangs or errors on advisory lock | `DIRECT_DATABASE_URL` is pointing at the pooled URL | Swap it to the direct (non-`-pooler`) string |
+| `P1012: Environment variable not found: DIRECT_DATABASE_URL` | An older build ran `prisma migrate deploy` directly | Fixed — the build now falls back to `DATABASE_URL`. Redeploy the latest commit. |
+| `prisma migrate deploy` hangs or errors on advisory lock | Migrations are running through the pooled URL | Set `DIRECT_DATABASE_URL` to the direct (non-`-pooler`) string |
 | `too many connections` under load | `DATABASE_URL` is the direct URL | Swap it to the pooled (`-pooler`) string |
 | Build succeeds, every page 500s | Usually a bad `DATABASE_URL` | Check Vercel → Deployments → Runtime Logs |
 

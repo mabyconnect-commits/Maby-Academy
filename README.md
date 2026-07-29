@@ -167,7 +167,7 @@ apart in behaviour.
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | yes | PostgreSQL connection string used by the app. **Must be a pooled URL on serverless.** |
-| `DIRECT_DATABASE_URL` | migrations only | Unpooled URL. Only `prisma migrate` uses it; the app runs fine without it. |
+| `DIRECT_DATABASE_URL` | recommended | Unpooled URL, used only by `prisma migrate`. If unset, migrations fall back to `DATABASE_URL` — which works, but can contend on advisory locks through a pooler. |
 | `SESSION_SECRET` | yes | 32+ chars; keys the HMAC over session tokens |
 | `NEXT_PUBLIC_APP_URL` | yes | Public origin — printed on certificates and referral links |
 | `SESSION_TTL_DAYS` | no | Session lifetime (default 30) |
@@ -194,7 +194,8 @@ Use a provider that gives you a **pooled** connection string:
 - **Anything else** — put PgBouncer in front of it
 
 Set `DATABASE_URL` to the pooled URL and `DIRECT_DATABASE_URL` to the direct
-one. Locally they're the same value.
+one. Locally they're the same value. If you only have one URL, leave
+`DIRECT_DATABASE_URL` unset — migrations fall back to `DATABASE_URL`.
 
 ### 2. Set environment variables
 
