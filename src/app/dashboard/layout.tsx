@@ -3,7 +3,9 @@ import { getCurrentUser, isStaff } from "@/lib/auth/session";
 import { countUnread } from "@/server/services/notifications";
 import { DashboardNav } from "@/components/DashboardNav";
 import { Logo } from "@/components/Brand";
-import { Avatar, Pill } from "@/components/ui";
+import { Avatar, StreakPill, XpPill } from "@/components/ui";
+import { MobileTabBar } from "@/components/MobileTabBar";
+import { levelFor } from "@/lib/levels";
 import { logoutAction } from "@/server/actions/auth";
 
 export default async function DashboardLayout({
@@ -23,10 +25,11 @@ export default async function DashboardLayout({
           <Logo size="sm" />
 
           <div className="flex items-center gap-3">
-            <Pill tone="gold">⚡ {user.pointsBalance.toLocaleString()} pts</Pill>
-            {user.currentStreak > 0 && (
-              <Pill tone="growth">🔥 {user.currentStreak}d</Pill>
-            )}
+            <StreakPill days={user.currentStreak} />
+            <XpPill
+              points={user.lifetimePoints}
+              level={levelFor(user.lifetimePoints).number}
+            />
             <div className="flex items-center gap-2.5">
               <Avatar name={user.name} src={user.avatarUrl} size={32} />
               <div className="hidden sm:block leading-tight">
@@ -48,12 +51,14 @@ export default async function DashboardLayout({
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 grid lg:grid-cols-[220px_1fr] gap-8 items-start">
+      <div className="mx-auto max-w-7xl px-4 py-8 pb-28 lg:pb-8 grid lg:grid-cols-[220px_1fr] gap-8 items-start">
         <DashboardNav unread={unread} showStaffLink={isStaff(user.role)} />
         <main id="main" className="min-w-0">
           {children}
         </main>
       </div>
+
+      <MobileTabBar />
     </div>
   );
 }

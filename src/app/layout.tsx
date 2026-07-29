@@ -1,5 +1,26 @@
 import type { Metadata, Viewport } from "next";
+import { Archivo, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
+
+/**
+ * Self-hosted at build time by next/font, so there is no request to Google
+ * and no need to widen the Content-Security-Policy for a third-party origin.
+ */
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-archivo",
+  display: "swap",
+});
+
+/** Certificates and award moments only — the institutional voice. */
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["600"],
+  style: ["italic", "normal"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -25,7 +46,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#07090f",
+  themeColor: "#0b0b0d",
 };
 
 export default function RootLayout({
@@ -34,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${archivo.variable} ${cormorant.variable}`}>
       <body>
         <a
           href="#main"

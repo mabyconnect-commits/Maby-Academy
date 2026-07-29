@@ -91,7 +91,7 @@ export default async function CommunityPage({
       </header>
 
       {community.guidelines && (
-        <Card className="mt-6 border-gold-600/30 bg-gold-500/[0.03]">
+        <Card variant="gold" className="mt-6">
           <p className="text-xs uppercase tracking-wide text-mist-400">
             House rules
           </p>

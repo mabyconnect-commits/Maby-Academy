@@ -67,7 +67,7 @@ export default async function DashboardPage() {
 
       {/* Resume --------------------------------------------------------- */}
       {resume && (
-        <Card className="border-gold-600/30 bg-gold-500/[0.04]">
+        <Card variant="gold">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
               <Pill tone="gold">Continue learning</Pill>

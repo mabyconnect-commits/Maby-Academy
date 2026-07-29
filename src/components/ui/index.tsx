@@ -10,16 +10,16 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "growth";
 type ButtonSize = "sm" | "md" | "lg";
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
+  "inline-flex items-center justify-center gap-2 font-medium rounded-[9px] transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary:
-    "bg-gold-500 text-ink-950 hover:bg-gold-400 shadow-sm shadow-gold-600/20",
+  primary: "bg-gold-500 text-ink-950 font-semibold hover:bg-gold-400",
+  // Outlined, matching the design's "Share to LinkedIn" secondary action.
   secondary:
-    "bg-ink-800 text-mist-100 border border-ink-600 hover:bg-ink-700 hover:border-ink-500",
+    "bg-transparent text-mist-100 border border-ink-600 hover:border-gold-600/60 hover:text-gold-300",
   ghost: "text-mist-300 hover:text-mist-100 hover:bg-ink-800",
   danger: "bg-flag-500 text-white hover:bg-flag-400",
-  growth: "bg-growth-500 text-ink-950 hover:bg-growth-400",
+  growth: "bg-growth-500 text-ink-950 font-semibold hover:bg-growth-400",
 };
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
@@ -61,11 +61,53 @@ export function LinkButton({
 // Surfaces
 // ---------------------------------------------------------------------------
 
+type CardVariant = "default" | "gold" | "raised";
+
+const CARD_SURFACES: Record<CardVariant, string> = {
+  default: "surface",
+  // Reserved for the single most important thing on a screen.
+  gold: "surface-gold",
+  raised: "surface-raised",
+};
+
 export function Card({
+  variant = "default",
   className,
   ...props
-}: ComponentProps<"div">) {
-  return <div className={cn("surface p-5", className)} {...props} />;
+}: ComponentProps<"div"> & { variant?: CardVariant }) {
+  return (
+    <div className={cn(CARD_SURFACES[variant], "p-5", className)} {...props} />
+  );
+}
+
+/**
+ * The two status chips that sit in every header in the design: a streak in
+ * ember and an XP total in gold. Kept together because they always appear
+ * together and must stay visually paired.
+ */
+export function StreakPill({ days }: { days: number }) {
+  if (days <= 0) return null;
+  return (
+    <Pill tone="ember" className="whitespace-nowrap">
+      {/* Abbreviated on phones — the full phrase wraps to two lines in a
+          16px-tall header, which looks broken. */}
+      <span aria-hidden>▲</span>
+      <span className="sm:hidden">{days}d</span>
+      <span className="hidden sm:inline">{days}-day streak</span>
+      <span className="sr-only">{days} day streak</span>
+    </Pill>
+  );
+}
+
+export function XpPill({ points, level }: { points: number; level?: number }) {
+  return (
+    <Pill tone="gold" className="whitespace-nowrap">
+      {points.toLocaleString()} XP
+      {level !== undefined && (
+        <span className="hidden sm:inline"> · LVL {level}</span>
+      )}
+    </Pill>
+  );
 }
 
 export function SectionHeading({
@@ -115,14 +157,15 @@ export function EmptyState({
 // Badges & pills
 // ---------------------------------------------------------------------------
 
-type Tone = "neutral" | "gold" | "growth" | "flag" | "info";
+type Tone = "neutral" | "gold" | "growth" | "flag" | "ember" | "info";
 
 const TONES: Record<Tone, string> = {
-  neutral: "bg-ink-800 text-mist-300 border-ink-600",
-  gold: "bg-gold-500/12 text-gold-300 border-gold-600/40",
-  growth: "bg-growth-500/12 text-growth-400 border-growth-600/40",
-  flag: "bg-flag-500/12 text-flag-400 border-flag-500/40",
-  info: "bg-ink-700 text-mist-200 border-ink-500",
+  neutral: "bg-white/5 text-mist-300 border-white/8",
+  gold: "bg-gold-500/12 text-gold-500 border-transparent",
+  growth: "bg-growth-500/12 text-growth-500 border-transparent",
+  flag: "bg-flag-500/12 text-flag-500 border-transparent",
+  ember: "bg-ember-500/12 text-ember-500 border-transparent",
+  info: "bg-info-500/12 text-info-500 border-transparent",
 };
 
 export function Pill({
@@ -137,7 +180,7 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold leading-none",
         TONES[tone],
         className,
       )}
@@ -225,23 +268,32 @@ export function StatTile({
   value,
   hint,
   icon,
+  accent = false,
 }: {
   label: string;
   value: string | number;
   hint?: string;
   icon?: string;
+  accent?: boolean;
 }) {
   return (
-    <div className="surface p-4">
+    <div className={cn(accent ? "surface-gold" : "surface", "p-4")}>
       <div className="flex items-center justify-between">
-        <p className="text-xs uppercase tracking-wide text-mist-400">{label}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-mist-400">
+          {label}
+        </p>
         {icon && (
           <span className="text-base" aria-hidden>
             {icon}
           </span>
         )}
       </div>
-      <p className="mt-2 text-2xl font-semibold tabular-nums text-mist-100">
+      <p
+        className={cn(
+          "mt-2 text-2xl font-bold tabular-nums",
+          accent ? "text-gold-400" : "text-mist-100",
+        )}
+      >
         {value}
       </p>
       {hint && <p className="mt-1 text-xs text-mist-400">{hint}</p>}
@@ -283,7 +335,7 @@ export function Field({
 }
 
 const CONTROL =
-  "w-full rounded-lg bg-ink-900 border border-ink-600 px-3.5 py-2.5 text-sm text-mist-100 placeholder:text-mist-400/60 focus:border-gold-500 transition-colors";
+  "w-full rounded-[9px] bg-ink-900 border border-ink-600 px-3.5 py-2.5 text-sm text-mist-100 placeholder:text-mist-400/60 focus:border-gold-500 transition-colors";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(CONTROL, className)} {...props} />;

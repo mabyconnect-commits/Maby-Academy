@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { verifyCertificate } from "@/server/services/certificates";
 import { Card, LinkButton, Pill } from "@/components/ui";
+import { Certificate } from "@/components/Certificate";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Certificate verification" };
@@ -62,7 +63,18 @@ export default async function VerifyTokenPage({
         </p>
       )}
 
-      <Card className="mt-8 text-left">
+      <div className="mt-8 text-left">
+        <Certificate
+          recipientName={certificate.user.name}
+          courseTitle={certificate.course.title}
+          issuedAt={certificate.issuedAt}
+          serial={certificate.serial}
+          finalScore={certificate.finalScore}
+          revokedAt={certificate.revokedAt}
+        />
+      </div>
+
+      <Card className="mt-6 text-left">
         <dl className="space-y-3 text-sm">
           <Row label="Serial number" value={certificate.serial} mono />
           <Row label="Issued" value={formatDate(certificate.issuedAt)} />

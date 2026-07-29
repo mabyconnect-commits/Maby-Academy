@@ -33,7 +33,7 @@ export default async function ReferralsPage() {
       </header>
 
       {/* Code & link ----------------------------------------------------- */}
-      <Card className="border-gold-600/30 bg-gold-500/[0.04]">
+      <Card variant="gold">
         <p className="text-xs uppercase tracking-wide text-mist-400">
           Your referral code
         </p>

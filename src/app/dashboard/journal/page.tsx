@@ -38,7 +38,7 @@ export default async function JournalPage() {
 
       {/* The privacy promise, stated plainly. A journal nobody trusts is a
           journal nobody writes in. */}
-      <Card className="border-growth-600/30 bg-growth-500/[0.04]">
+      <Card className="border-growth-600/40">
         <div className="flex gap-3">
           <span className="text-lg shrink-0" aria-hidden>
             🔒

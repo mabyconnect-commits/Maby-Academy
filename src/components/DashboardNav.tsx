@@ -4,16 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
+/**
+ * `inTabBar` marks destinations the mobile bottom bar already covers. Those
+ * are hidden from this scroller on phones so the two navigations don't
+ * present the same links twice — everything else stays reachable here.
+ */
 const ITEMS = [
-  { href: "/dashboard", label: "Overview", icon: "◈", exact: true },
-  { href: "/dashboard/courses", label: "My courses", icon: "📚" },
-  { href: "/dashboard/assignments", label: "Assignments", icon: "✍" },
+  { href: "/dashboard", label: "Overview", icon: "◈", exact: true, inTabBar: true },
+  { href: "/dashboard/courses", label: "My courses", icon: "📚", inTabBar: true },
+  { href: "/dashboard/assignments", label: "Assignments", icon: "✍", inTabBar: true },
   { href: "/dashboard/live", label: "Live sessions", icon: "🔴" },
   { href: "/dashboard/growth", label: "Growth", icon: "🌱" },
   { href: "/dashboard/journal", label: "Journal", icon: "📓" },
-  { href: "/dashboard/certificates", label: "Certificates", icon: "🎓" },
+  { href: "/dashboard/certificates", label: "Certificates", icon: "🎓", inTabBar: true },
   { href: "/dashboard/rewards", label: "Rewards", icon: "⚡" },
-  { href: "/dashboard/referrals", label: "Referrals", icon: "🤝" },
+  { href: "/dashboard/referrals", label: "Referrals", icon: "🤝", inTabBar: true },
   { href: "/dashboard/notifications", label: "Notifications", icon: "🔔", badge: true },
   { href: "/dashboard/settings", label: "Settings", icon: "⚙" },
 ];
@@ -43,7 +48,8 @@ export function DashboardNav({
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-colors",
+              "items-center gap-2.5 rounded-[9px] px-3 py-2 text-sm whitespace-nowrap transition-colors",
+              item.inTabBar ? "hidden lg:flex" : "flex",
               active
                 ? "bg-ink-800 text-mist-100 font-medium"
                 : "text-mist-400 hover:text-mist-100 hover:bg-ink-850",

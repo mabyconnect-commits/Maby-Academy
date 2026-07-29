@@ -56,7 +56,7 @@ export default async function RewardsPage() {
       </header>
 
       {/* Level ----------------------------------------------------------- */}
-      <Card className="border-gold-600/30 bg-gold-500/[0.04]">
+      <Card variant="gold">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-wide text-mist-400">
