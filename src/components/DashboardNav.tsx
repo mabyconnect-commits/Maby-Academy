@@ -9,6 +9,8 @@ const ITEMS = [
   { href: "/dashboard/courses", label: "My courses", icon: "📚" },
   { href: "/dashboard/assignments", label: "Assignments", icon: "✍" },
   { href: "/dashboard/live", label: "Live sessions", icon: "🔴" },
+  { href: "/dashboard/growth", label: "Growth", icon: "🌱" },
+  { href: "/dashboard/journal", label: "Journal", icon: "📓" },
   { href: "/dashboard/certificates", label: "Certificates", icon: "🎓" },
   { href: "/dashboard/rewards", label: "Rewards", icon: "⚡" },
   { href: "/dashboard/referrals", label: "Referrals", icon: "🤝" },

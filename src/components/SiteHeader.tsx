@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 
 const NAV = [
   { href: "/courses", label: "Courses" },
+  { href: "/community", label: "Community" },
   { href: "/#pillars", label: "Pillars" },
   { href: "/#how", label: "How it works" },
   { href: "/verify", label: "Verify a certificate" },

@@ -50,6 +50,14 @@ export default async function AdminLayout({
                 Review
               </Link>
             )}
+            {can(user, "report:review") && (
+              <Link
+                href="/admin/moderation"
+                className="text-sm text-mist-300 hover:text-mist-100 whitespace-nowrap"
+              >
+                Moderation
+              </Link>
+            )}
             {can(user, "commission:approve") && (
               <Link
                 href="/admin/finance"

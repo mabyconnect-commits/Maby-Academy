@@ -46,7 +46,7 @@ Last updated: Phase B (partials closed — editorial workflow, finance, security
 | Administrator | ✅ | |
 | Mentor | ✅ | Role + permissions + MentorAssignment/MentorSession models |
 | Course Reviewer | ✅ | Role + review queue UI + approval gate |
-| Community Moderator | ✅ | Role + permissions; moderation UI ⬜ |
+| Community Moderator | ✅ | Role + permissions + moderation queue |
 | Support Agent | ✅ | Role + permissions; ticket UI ⬜ |
 | Finance Manager | ✅ | Role + commission queue + payout UI |
 | Super Administrator | ✅ | Holds all 45 permissions, derived not listed |
@@ -75,7 +75,7 @@ Last updated: Phase B (partials closed — editorial workflow, finance, security
 | Instructors / instructor profile | ⬜ | |
 | Pricing | ⬜ | Depends on Plan model |
 | Scholarships | ⬜ | |
-| Community (public) | ⬜ | |
+| Community (public) | ✅ | Public index + community + post pages |
 | Success stories | ⬜ | |
 | Events | ⬜ | |
 | Blog / article | ⬜ | |
@@ -95,7 +95,7 @@ Last updated: Phase B (partials closed — editorial workflow, finance, security
 | Student dashboard | ✅ | Stats, resume, courses, feedback, sessions |
 | Admin dashboard | ✅ | Overview + grading queue |
 | Instructor dashboard | 🟡 | Shares admin shell; needs own analytics |
-| Daily growth checklist | ⬜ | Depends on Habit model |
+| Daily growth checklist | ✅ | Row-sized tap targets, streak badges |
 | Personal growth score | ⬜ | |
 
 ---
@@ -198,10 +198,10 @@ Last updated: Phase B (partials closed — editorial workflow, finance, security
 | Reminders | ⬜ | Needs notification channel |
 | Recurring events | ⬜ | |
 | Instructor availability / booking | ⬜ | |
-| Communities (academy, school, course, cohort, private) | ⬜ | |
-| Posts / comments / reactions | ⬜ | |
-| Polls, Q&A, pinned posts | ⬜ | |
-| Moderation & reports | ⬜ | |
+| Communities (academy, school, course, cohort, private) | ✅ | Scoped model, join/leave, membership-gated posting |
+| Posts / comments / reactions | ✅ | Threaded one level, denormalised counters |
+| Polls, Q&A, pinned posts | 🟡 | Q&A + pinning done; polls ⬜ |
+| Moderation & reports | ✅ | Report → flag (not hide) → moderator queue → remove/dismiss |
 | Direct messages | ⬜ | |
 | Member directory | ⬜ | |
 | Community guidelines | ✅ | |
@@ -219,11 +219,11 @@ Last updated: Phase B (partials closed — editorial workflow, finance, security
 | Levels / XP | ✅ | 10 derived tiers, ladder UI, progress to next |
 | Reward store | ⬜ | |
 | Seasonal challenges | ⬜ | |
-| Anti-abuse controls | ✅ | Postgres fixed-window rate limits on auth paths, fails open |
-| Habits | ⬜ | |
-| Goals (daily→annual) | ⬜ | |
-| Journals (private by default) | ⬜ | |
-| Reflections / gratitude / prayer points | ⬜ | |
+| Anti-abuse controls | ✅ | Rate limits on auth + posting; daily caps on community and habit points |
+| Habits | ✅ | Daily checklist, streaks, 28-day grid, capped points |
+| Goals (daily→annual) | ✅ | 5 horizons, progress, mentor sharing opt-in |
+| Journals (private by default) | ✅ | Verified: admin cannot read a member's journal |
+| Reflections / gratitude / prayer points | ✅ | Five entry kinds with prompts |
 | Weekly & monthly reviews | ⬜ | |
 | Personal scorecards | ⬜ | |
 | Faith experience | ⬜ | Devotionals, scripture, prayer reminders |
@@ -339,7 +339,7 @@ Last updated: Phase B (partials closed — editorial workflow, finance, security
 | Data download | ⬜ |
 | Account deletion request | ⬜ |
 | Communication preferences | ⬜ |
-| Journals private by default | ⬜ (model not built yet) |
+| Journals private by default | ✅ | Enforced in the policy layer, not the UI |
 
 ### Testing
 | Item | State | Notes |
