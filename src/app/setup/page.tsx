@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { Logo } from "@/components/Brand";
+import {
+  DATABASE_URL_CANDIDATES,
+  DIRECT_URL_CANDIDATES,
+} from "@/lib/database-url";
 
 export const metadata: Metadata = {
   title: "Setup required",
   robots: { index: false, follow: false },
 };
+
+/** Read at request time, so it reflects the live deployment, not build time. */
+export const dynamic = "force-dynamic";
 
 /**
  * Shown when DATABASE_URL is absent. Deliberately self-contained: it touches
@@ -12,6 +19,36 @@ export const metadata: Metadata = {
  * where none of those exist.
  */
 export default function SetupPage() {
+  /**
+   * Live view of what this running deployment can actually see.
+   *
+   * Presence only — never values. This page is public, and the variables in
+   * question are database credentials and a session signing key.
+   */
+  const detected = [
+    ...DATABASE_URL_CANDIDATES.map((name) => ({
+      name,
+      group: "Database connection" as const,
+      present: Boolean(process.env[name]?.trim()),
+    })),
+    ...DIRECT_URL_CANDIDATES.map((name) => ({
+      name,
+      group: "Migrations (optional)" as const,
+      present: Boolean(process.env[name]?.trim()),
+    })),
+    {
+      name: "SESSION_SECRET",
+      group: "Sessions" as const,
+      present: (process.env.SESSION_SECRET?.trim().length ?? 0) >= 32,
+    },
+  ];
+
+  const anyDatabase = DATABASE_URL_CANDIDATES.some((n) =>
+    Boolean(process.env[n]?.trim()),
+  );
+  const hasSecret = (process.env.SESSION_SECRET?.trim().length ?? 0) >= 32;
+  const vercelEnv = process.env.VERCEL_ENV;
+
   const steps = [
     {
       n: "01",
@@ -86,6 +123,76 @@ export default function SetupPage() {
           only value you have to enter yourself is{" "}
           <code className="text-gold-400">SESSION_SECRET</code>.
         </p>
+
+        {/* Live diagnostics -------------------------------------------- */}
+        <section className="mt-10">
+          <h2 className="text-lg font-semibold text-mist-100">
+            What this deployment can see right now
+          </h2>
+          <p className="mt-1.5 text-sm text-mist-400">
+            Read live from the running deployment
+            {vercelEnv ? ` (environment: ${vercelEnv})` : ""}. Names and
+            presence only — values are never shown.
+          </p>
+
+          <div className="mt-4 surface p-0 overflow-hidden">
+            <ul className="divide-y divide-ink-800">
+              {detected.map((item) => (
+                <li
+                  key={item.name}
+                  className="flex items-center gap-3 px-4 py-3"
+                >
+                  <span
+                    className={
+                      item.present
+                        ? "text-growth-400 w-4 shrink-0"
+                        : "text-mist-400 w-4 shrink-0"
+                    }
+                    aria-hidden
+                  >
+                    {item.present ? "✓" : "—"}
+                  </span>
+                  <code className="font-mono text-xs text-mist-200 flex-1 break-all">
+                    {item.name}
+                  </code>
+                  <span
+                    className={`text-xs shrink-0 ${
+                      item.present ? "text-growth-400" : "text-mist-400"
+                    }`}
+                  >
+                    {item.present ? "set" : "not set"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* The single most common cause, called out explicitly. */}
+          {!anyDatabase && (
+            <div className="mt-4 rounded-lg border border-gold-600/40 bg-gold-500/10 px-4 py-3.5 text-sm text-gold-300">
+              <p className="font-semibold">
+                Already added your variables? They need a redeploy.
+              </p>
+              <p className="mt-1.5 text-mist-300 leading-relaxed">
+                Vercel applies environment variables to the{" "}
+                <strong>next</strong> deployment — the one running now was
+                built before you added them. Go to{" "}
+                <strong>Deployments</strong>, open the most recent one, and
+                choose <strong>Redeploy</strong>. Then reload this page.
+              </p>
+            </div>
+          )}
+
+          {anyDatabase && !hasSecret && (
+            <div className="mt-4 rounded-lg border border-flag-500/40 bg-flag-500/10 px-4 py-3.5 text-sm text-flag-400">
+              <p className="font-semibold">Database found — SESSION_SECRET missing.</p>
+              <p className="mt-1.5 text-mist-300 leading-relaxed">
+                Add <code>SESSION_SECRET</code> (32+ characters) and redeploy.
+                Without it nobody can sign in.
+              </p>
+            </div>
+          )}
+        </section>
 
         {/* Steps ------------------------------------------------------- */}
         <ol className="mt-10 space-y-3">
