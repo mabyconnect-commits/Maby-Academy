@@ -154,6 +154,17 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
         // real video would otherwise be completable by opening the page.
         minWatchPercent: lesson.type === "VIDEO" ? 80 : 0,
         videoDuration: lesson.type === "VIDEO" ? readingSeconds(lesson.body) : 0,
+        activityTitle: lesson.activity?.title ?? null,
+        activityPrompt: lesson.activity?.prompt ?? null,
+        /**
+         * A written lesson with an activity is gated on the learner's write-up.
+         * Without this a TEXT lesson with no quiz and no assignment completes
+         * simply by being opened, which contradicts the academy's central
+         * promise — and 120 characters is short enough to be honest work rather
+         * than a hurdle.
+         */
+        minReflectionChars:
+          lesson.activity && !lesson.quiz && !lesson.assignment ? 120 : 0,
       };
 
       // Upsert on (moduleId, slug): re-running the seed updates the lesson in

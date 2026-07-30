@@ -22,7 +22,7 @@ Use **test keys** (`FLWSECK_TEST-…`) until you are ready to take real money.
 
 Dashboard → **Settings → Webhooks**:
 
-- **URL**: `https://mabyacademy.site/api/webhooks/flutterwave`
+- **URL**: `https://mabyacademy.online/api/webhooks/flutterwave`
 - **Secret hash**: any long random string — generate one with
   `openssl rand -hex 32`
 

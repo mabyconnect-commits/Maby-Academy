@@ -103,6 +103,11 @@ export async function trackProgressAction(
       lessonId: input.lessonId,
       watchedSeconds: input.watchedSeconds,
       completed: input.completed,
+      // Absent means "don't change it" — a video-progress ping must not wipe a
+      // write-up the learner already saved.
+      reflection: formData.has("reflection")
+        ? String(formData.get("reflection") ?? "")
+        : undefined,
     });
 
     revalidatePath("/dashboard");

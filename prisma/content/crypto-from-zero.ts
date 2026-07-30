@@ -881,6 +881,11 @@ Question 3 catches people constantly. Funds arrive perfectly and cannot be moved
 Ask you to share your screen while a seed phrase is visible, ask for a phrase in chat, or send you a link in a direct message. If anyone claiming to be from this session does any of those things, it is not us.
 
 Bring a wallet with a small amount in it and your questions. Sessions are recorded, and the recording is posted here afterwards.`,
+          activity: {
+            title: "Write down the question you still have",
+            prompt:
+              "Attend live, or watch the recording. Then write the one thing that is still unclear to you afterwards — the question you would ask if there were no time limit. Bring it to the next session or post it in the community. A course that leaves you with a sharper question has worked; one that leaves you with none has probably not been understood.",
+          },
         },
       ],
     },

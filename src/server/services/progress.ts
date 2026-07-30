@@ -53,6 +53,8 @@ export async function trackLessonProgress(params: {
   lessonId: string;
   watchedSeconds?: number;
   completed?: boolean;
+  /** The learner's write-up of the lesson activity, where one is required. */
+  reflection?: string;
 }) {
   const lesson = await db.lesson.findUnique({
     where: { id: params.lessonId },
@@ -63,6 +65,7 @@ export async function trackLessonProgress(params: {
       pointsValue: true,
       videoDuration: true,
       minWatchPercent: true,
+      minReflectionChars: true,
       module: { select: { courseId: true, course: { select: { slug: true } } } },
     },
   });
@@ -115,6 +118,23 @@ export async function trackLessonProgress(params: {
       }
     }
 
+    /**
+     * Reflection gate. A written lesson with an activity but no quiz or
+     * assignment would otherwise complete on being opened — the exact thing the
+     * academy promises never happens. The write-up is not graded and nobody
+     * reads it; requiring it is about the learner having done the work.
+     */
+    const reflection = (params.reflection ?? existing?.reflection ?? "").trim();
+
+    if (requested && !wasCompleted && lesson.minReflectionChars > 0) {
+      if (reflection.length < lesson.minReflectionChars) {
+        throw new ServiceError(
+          `Write up the exercise before completing this lesson — at least ${lesson.minReflectionChars} characters. You're at ${reflection.length}. Nobody grades it; it is for you.`,
+          400,
+        );
+      }
+    }
+
     const nowCompleted = requested;
 
     await tx.lessonProgress.upsert({
@@ -127,6 +147,7 @@ export async function trackLessonProgress(params: {
         watchedSeconds,
         isCompleted: nowCompleted,
         completedAt: nowCompleted ? new Date() : null,
+        reflection: reflection || null,
       },
       update: {
         watchedSeconds,
@@ -134,6 +155,11 @@ export async function trackLessonProgress(params: {
         completedAt: nowCompleted
           ? (existing?.completedAt ?? new Date())
           : null,
+        // Only overwrite when this call carried one, so marking a lesson
+        // complete a second time cannot wipe an earlier write-up.
+        ...(params.reflection !== undefined
+          ? { reflection: reflection || null }
+          : {}),
       },
     });
 

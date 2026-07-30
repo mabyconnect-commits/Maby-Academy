@@ -201,6 +201,16 @@ export default async function LessonPage({
                     ? `/courses/${course.slug}/lessons/${data.next.slug}`
                     : null
                 }
+                activity={
+                  lesson.activityTitle && lesson.activityPrompt
+                    ? {
+                        title: lesson.activityTitle,
+                        prompt: lesson.activityPrompt,
+                      }
+                    : null
+                }
+                minReflectionChars={lesson.minReflectionChars}
+                existingReflection={progress?.reflection ?? null}
               />
             </div>
           )}

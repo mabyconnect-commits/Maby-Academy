@@ -1,6 +1,6 @@
 # Deploying Maby Academy to Vercel
 
-A step-by-step checklist for `mabyacademy.site`.
+A step-by-step checklist for `mabyacademy.online`.
 
 > **Secrets are never written into this file.** `SESSION_SECRET` and your
 > database URLs are set in the Vercel dashboard only. If a secret ever lands
@@ -117,7 +117,7 @@ unless noted.
 | --- | --- | --- |
 | `DATABASE_URL` | **yes** | Neon **pooled** string (the one with `-pooler`) |
 | `SESSION_SECRET` | **yes** | The 64-character random string generated for you — never commit it |
-| `NEXT_PUBLIC_APP_URL` | **yes** | `https://mabyacademy.site` |
+| `NEXT_PUBLIC_APP_URL` | **yes** | `https://mabyacademy.online` |
 | `DIRECT_DATABASE_URL` | recommended | Neon **direct** string (no `-pooler`). If omitted, migrations reuse `DATABASE_URL`. |
 | `REFERRAL_COMMISSION_RATES` | no | `0.10,0.05,0.02` (this is the default) |
 
@@ -154,10 +154,10 @@ courses and zero members, because the database is empty. That is correct.
 
 ---
 
-## Step 5 — Connect mabyacademy.site
+## Step 5 — Connect mabyacademy.online
 
 1. In Vercel: **Settings → Domains → Add**.
-2. Enter `mabyacademy.site`. Add `www.mabyacademy.site` too — Vercel will
+2. Enter `mabyacademy.online`. Add `www.mabyacademy.online` too — Vercel will
    offer to redirect it to the apex domain. Accept.
 3. Vercel shows you the DNS records to create. Go to wherever you bought the
    domain and add them:
@@ -173,9 +173,27 @@ the table above**, as they occasionally change.
 4. DNS propagation takes anywhere from a few minutes to a couple of hours.
    Vercel issues the HTTPS certificate automatically once it resolves.
 
-Confirm `NEXT_PUBLIC_APP_URL` is `https://mabyacademy.site` before you enrol
-real students — that value is printed onto every certificate's verification
-link, and certificates issued beforehand keep the old URL permanently.
+### `NEXT_PUBLIC_APP_URL` must match the domain people actually visit
+
+This one variable is the source of three outward-facing URLs:
+
+| Used for | Breaks if it's wrong |
+| --- | --- |
+| Certificate verification links | Members share a link on a domain you may not serve |
+| Referral invite links | Invites point elsewhere, so **referral attribution is lost** |
+| The Flutterwave checkout return URL | Payers land on the wrong domain after paying |
+
+All three are **generated when the page is read**, not stored in the database.
+So correcting this variable and redeploying fixes every existing certificate
+and referral link at once — nothing has to be reissued and no data is wrong.
+
+**If you change domains after launch**, keep the old domain attached in Vercel
+and redirecting to the new one. Referral links already shared by members are
+out in the world on the old domain, and dropping it would silently break their
+commissions.
+
+Set it to the domain members type into a browser — `https://mabyacademy.online`
+— not a `*.vercel.app` preview URL.
 
 ---
 
@@ -197,7 +215,7 @@ creates accounts whose password is published in this repository.
 
 So:
 
-1. Go to **https://mabyacademy.site/register** and sign up normally with
+1. Go to **https://mabyacademy.online/register** and sign up normally with
    `Mabyconnect@gmail.com` and a strong password. This makes you a `STUDENT`.
 
 2. Promote yourself. From your own machine, in the project folder:
@@ -227,10 +245,10 @@ DATABASE_URL="<your Neon pooled string>" \
 
 ## Post-launch checklist
 
-- [ ] Homepage loads on `https://mabyacademy.site`
+- [ ] Homepage loads on `https://mabyacademy.online`
 - [ ] Registration works and lands you on the dashboard
 - [ ] You have promoted yourself to `ADMIN` and `/admin` opens
-- [ ] `www.mabyacademy.site` redirects to the apex domain
+- [ ] `www.mabyacademy.online` redirects to the apex domain
 - [ ] Function region matches the database region
 - [ ] `NEXT_PUBLIC_APP_URL` has no trailing slash and uses `https://`
 

@@ -12,7 +12,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // Pooled connection, used by the running app. On serverless (Vercel) every
   // function instance opens its own connection, so this must point at a
   // pooler (PgBouncer / Neon / Supabase pooled URL) or the database will run
@@ -71,12 +71,12 @@ model RolePermission {
 
 /// Secondary roles. A user may mentor while also being a student.
 model UserRole {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role       Role
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        Role
   grantedById String?
-  grantedAt  DateTime @default(now())
+  grantedAt   DateTime @default(now())
 
   @@unique([userId, role])
   @@index([userId])
@@ -84,18 +84,18 @@ model UserRole {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String
-  name          String
-  role          Role      @default(STUDENT)
-  avatarUrl     String?
-  bio           String?
-  country       String?
-  timezone      String    @default("UTC")
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String
+  name         String
+  role         Role    @default(STUDENT)
+  avatarUrl    String?
+  bio          String?
+  country      String?
+  timezone     String  @default("UTC")
 
   emailVerifiedAt DateTime?
-  isActive        Boolean  @default(true)
+  isActive        Boolean   @default(true)
   lastLoginAt     DateTime?
 
   // --- Referral network -------------------------------------------------
@@ -107,10 +107,10 @@ model User {
   referrals    User[]  @relation("ReferralTree")
 
   // --- Rewards economy (denormalised running totals) ---------------------
-  pointsBalance  Int      @default(0)
-  lifetimePoints Int      @default(0)
-  currentStreak  Int      @default(0)
-  longestStreak  Int      @default(0)
+  pointsBalance  Int       @default(0)
+  lifetimePoints Int       @default(0)
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
   lastActiveDate DateTime?
 
   createdAt DateTime @default(now())
@@ -120,56 +120,56 @@ model User {
   verificationTokens  VerificationToken[]
   passwordResetTokens PasswordResetToken[]
 
-  enrollments      Enrollment[]
-  lessonProgress   LessonProgress[]
-  submissions      Submission[]        @relation("SubmissionStudent")
-  gradedSubmissions Submission[]       @relation("SubmissionGrader")
-  quizAttempts     QuizAttempt[]
-  certificates     Certificate[]
-  reviews          CourseReview[]
+  enrollments       Enrollment[]
+  lessonProgress    LessonProgress[]
+  submissions       Submission[]     @relation("SubmissionStudent")
+  gradedSubmissions Submission[]     @relation("SubmissionGrader")
+  quizAttempts      QuizAttempt[]
+  certificates      Certificate[]
+  reviews           CourseReview[]
 
-  taughtCourses    Course[]            @relation("CourseInstructor")
-  hostedSessions   LiveSession[]       @relation("LiveSessionHost")
-  rsvps            LiveSessionRsvp[]
+  taughtCourses  Course[]          @relation("CourseInstructor")
+  hostedSessions LiveSession[]     @relation("LiveSessionHost")
+  rsvps          LiveSessionRsvp[]
 
-  extraRoles          UserRole[]
-  onboarding          OnboardingProfile?
+  extraRoles UserRole[]
+  onboarding OnboardingProfile?
 
-  cohortMemberships   CohortMember[]
-  mentorAssignments   MentorAssignment[]  @relation("MentorOf")
-  menteeAssignments   MentorAssignment[]  @relation("MenteeOf")
-  mentorSessions      MentorSession[]     @relation("SessionMentor")
-  menteeSessions      MentorSession[]     @relation("SessionMentee")
+  cohortMemberships CohortMember[]
+  mentorAssignments MentorAssignment[] @relation("MentorOf")
+  menteeAssignments MentorAssignment[] @relation("MenteeOf")
+  mentorSessions    MentorSession[]    @relation("SessionMentor")
+  menteeSessions    MentorSession[]    @relation("SessionMentee")
 
   communityMemberships CommunityMember[]
-  posts               Post[]
-  comments            Comment[]
-  reactions           Reaction[]
-  reportsFiled        Report[]            @relation("ReportReporter")
-  reportsResolved     Report[]            @relation("ReportResolver")
+  posts                Post[]
+  comments             Comment[]
+  reactions            Reaction[]
+  reportsFiled         Report[]          @relation("ReportReporter")
+  reportsResolved      Report[]          @relation("ReportResolver")
 
-  habits              Habit[]
-  goals               Goal[]
-  journalEntries      JournalEntry[]
+  habits         Habit[]
+  goals          Goal[]
+  journalEntries JournalEntry[]
 
-  subscriptions       Subscription[]
-  invoices            Invoice[]
-  scholarships        Scholarship[]
+  subscriptions Subscription[]
+  invoices      Invoice[]
+  scholarships  Scholarship[]
 
-  ticketsOpened       SupportTicket[]     @relation("TicketRequester")
-  ticketsAssigned     SupportTicket[]     @relation("TicketAgent")
-  ticketMessages      SupportMessage[]
+  ticketsOpened   SupportTicket[]  @relation("TicketRequester")
+  ticketsAssigned SupportTicket[]  @relation("TicketAgent")
+  ticketMessages  SupportMessage[]
 
-  lessonNotes         LessonNote[]
-  savedLessons        SavedLesson[]
+  lessonNotes  LessonNote[]
+  savedLessons SavedLesson[]
 
-  pointsLedger        PointsTransaction[]
-  badges              UserBadge[]
-  earnedCommissions   ReferralCommission[] @relation("CommissionBeneficiary")
+  pointsLedger         PointsTransaction[]
+  badges               UserBadge[]
+  earnedCommissions    ReferralCommission[] @relation("CommissionBeneficiary")
   generatedCommissions ReferralCommission[] @relation("CommissionSource")
-  orders              Order[]
-  notifications       Notification[]
-  auditLogs           AuditLog[]
+  orders               Order[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
 
   @@index([referredById])
   @@index([role])
@@ -196,26 +196,26 @@ model Session {
 }
 
 model VerificationToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([userId])
   @@map("verification_tokens")
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([userId])
   @@map("password_reset_tokens")
@@ -301,25 +301,25 @@ enum ProgrammeStatus {
 }
 
 model Programme {
-  id          String          @id @default(cuid())
-  schoolId    String
-  school      School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  title       String
-  slug        String          @unique
-  subtitle    String?
-  description String
-  outcomes    Json?           // string[] of learning outcomes
-  level       CourseLevel     @default(BEGINNER)
-  status      ProgrammeStatus @default(DRAFT)
-  priceMinor  Int             @default(0)
-  currency    String          @default("USD")
-  estimatedWeeks Int          @default(0)
+  id             String          @id @default(cuid())
+  schoolId       String
+  school         School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title          String
+  slug           String          @unique
+  subtitle       String?
+  description    String
+  outcomes       Json? // string[] of learning outcomes
+  level          CourseLevel     @default(BEGINNER)
+  status         ProgrammeStatus @default(DRAFT)
+  priceMinor     Int             @default(0)
+  currency       String          @default("USD")
+  estimatedWeeks Int             @default(0)
   /// Percentage of member courses required for the programme credential.
-  passThreshold  Int          @default(80)
-  sortOrder   Int             @default(0)
-  publishedAt DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  passThreshold  Int             @default(80)
+  sortOrder      Int             @default(0)
+  publishedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   courses ProgrammeCourse[]
   cohorts Cohort[]
@@ -386,30 +386,30 @@ model CohortMember {
 }
 
 model Course {
-  id             String       @id @default(cuid())
-  schoolId       String?
-  school         School?      @relation(fields: [schoolId], references: [id], onDelete: SetNull)
-  title          String
-  slug           String       @unique
-  subtitle       String?
-  description    String
-  thumbnailUrl   String?
-  trailerUrl     String?
-  level          CourseLevel  @default(BEGINNER)
-  status         CourseStatus @default(DRAFT)
+  id           String       @id @default(cuid())
+  schoolId     String?
+  school       School?      @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  title        String
+  slug         String       @unique
+  subtitle     String?
+  description  String
+  thumbnailUrl String?
+  trailerUrl   String?
+  level        CourseLevel  @default(BEGINNER)
+  status       CourseStatus @default(DRAFT)
 
   /// Price in minor units (kobo/cents). 0 = free.
-  priceMinor     Int          @default(0)
-  currency       String       @default("USD")
+  priceMinor Int    @default(0)
+  currency   String @default("USD")
 
-  estimatedHours Int          @default(0)
+  estimatedHours Int @default(0)
   /// Percentage of lessons that must be complete before a certificate issues.
-  passThreshold  Int          @default(80)
+  passThreshold  Int @default(80)
 
   /// "What you'll be able to do" — concrete capabilities, not topics covered.
   /// Shown on the course page and used by instructors to keep a course honest
   /// about what it delivers.
-  outcomes       String[]     @default([])
+  outcomes String[] @default([])
 
   categoryId   String
   category     Category @relation(fields: [categoryId], references: [id])
@@ -468,22 +468,22 @@ enum LessonType {
 }
 
 model Lesson {
-  id        String     @id @default(cuid())
-  moduleId  String
-  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  title     String
-  slug      String
-  type      LessonType @default(VIDEO)
+  id       String     @id @default(cuid())
+  moduleId String
+  module   Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title    String
+  slug     String
+  type     LessonType @default(VIDEO)
 
   /// Markdown body for TEXT lessons, or supporting notes for VIDEO lessons.
   content       String?
   videoUrl      String?
   videoDuration Int?    @default(0) // seconds
 
-  sortOrder  Int     @default(0)
+  sortOrder   Int     @default(0)
   /// Free lessons are viewable without enrolment — the marketing hook.
-  isPreview  Boolean @default(false)
-  pointsValue Int    @default(10)
+  isPreview   Boolean @default(false)
+  pointsValue Int     @default(10)
 
   /// Opening a page must never count as learning. For VIDEO lessons the
   /// student must have watched at least this share before completion is
@@ -494,10 +494,10 @@ model Lesson {
   /// and writes what happened. This is the completion condition for a written
   /// lesson that has no quiz or assignment, and without it such a lesson would
   /// complete simply by being opened.
-  activityTitle   String?
-  activityPrompt  String?
+  activityTitle      String?
+  activityPrompt     String?
   /// Minimum characters of reflection required to complete. 0 disables it.
-  minReflectionChars Int @default(0)
+  minReflectionChars Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -574,13 +574,14 @@ model LessonProgress {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  /// The learner's own write-up of the lesson's activity. Private to them and
+  /// their consented mentor — it is not coursework and is never graded.
+  reflection String?
+
   @@unique([userId, lessonId])
   @@index([userId])
   @@index([lessonId])
   @@map("lesson_progress")
-  /// The learner's own write-up of the lesson's activity. Private to them and
-  /// their consented mentor — it is not coursework and is never graded.
-  reflection    String?
 }
 
 // ===========================================================================
@@ -588,21 +589,21 @@ model LessonProgress {
 // ===========================================================================
 
 model Assignment {
-  id          String   @id @default(cuid())
-  lessonId    String   @unique
-  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  title       String
+  id           String    @id @default(cuid())
+  lessonId     String    @unique
+  lesson       Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title        String
   instructions String
   /// Rubric criteria as [{ name, description, maxPoints }].
-  rubric      Json?
-  maxScore    Int      @default(100)
-  passScore   Int      @default(60)
-  dueAt       DateTime?
-  allowsFile  Boolean  @default(true)
-  allowsText  Boolean  @default(true)
-  pointsValue Int      @default(50)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  rubric       Json?
+  maxScore     Int       @default(100)
+  passScore    Int       @default(60)
+  dueAt        DateTime?
+  allowsFile   Boolean   @default(true)
+  allowsText   Boolean   @default(true)
+  pointsValue  Int       @default(50)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   submissions Submission[]
 
@@ -630,13 +631,13 @@ model Submission {
   linkUrl    String?
   attempt    Int     @default(1)
 
-  score       Int?
+  score        Int?
   /// Per-criterion scores keyed by rubric criterion name.
   rubricScores Json?
-  feedback    String?
-  graderId    String?
-  grader      User?     @relation("SubmissionGrader", fields: [graderId], references: [id], onDelete: SetNull)
-  gradedAt    DateTime?
+  feedback     String?
+  graderId     String?
+  grader       User?     @relation("SubmissionGrader", fields: [graderId], references: [id], onDelete: SetNull)
+  gradedAt     DateTime?
 
   submittedAt DateTime?
   createdAt   DateTime  @default(now())
@@ -693,28 +694,28 @@ model QuizQuestion {
 }
 
 model QuizOption {
-  id         String  @id @default(cuid())
+  id         String       @id @default(cuid())
   questionId String
   question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
   text       String
-  isCorrect  Boolean @default(false)
-  sortOrder  Int     @default(0)
+  isCorrect  Boolean      @default(false)
+  sortOrder  Int          @default(0)
 
   @@index([questionId])
   @@map("quiz_options")
 }
 
 model QuizAttempt {
-  id          String    @id @default(cuid())
-  quizId      String
-  quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  attempt     Int       @default(1)
-  scorePercent Int      @default(0)
-  passed      Boolean   @default(false)
-  startedAt   DateTime  @default(now())
-  submittedAt DateTime?
+  id           String    @id @default(cuid())
+  quizId       String
+  quiz         Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempt      Int       @default(1)
+  scorePercent Int       @default(0)
+  passed       Boolean   @default(false)
+  startedAt    DateTime  @default(now())
+  submittedAt  DateTime?
 
   answers QuizAnswer[]
 
@@ -724,13 +725,13 @@ model QuizAttempt {
 }
 
 model QuizAnswer {
-  id                String   @id @default(cuid())
+  id                String       @id @default(cuid())
   attemptId         String
-  attempt           QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attempt           QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   questionId        String
   question          QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
   selectedOptionIds String[]
-  isCorrect         Boolean  @default(false)
+  isCorrect         Boolean      @default(false)
 
   @@unique([attemptId, questionId])
   @@map("quiz_answers")
@@ -748,9 +749,9 @@ model Certificate {
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   /// Human-facing certificate number, e.g. MABY-2026-000042.
-  serial       String @unique
+  serial       String    @unique
   /// Random public token used by /verify/[token] — safe to print on the PDF.
-  verifyToken  String @unique
+  verifyToken  String    @unique
   finalScore   Int?
   issuedAt     DateTime  @default(now())
   revokedAt    DateTime?
@@ -773,13 +774,13 @@ enum LiveSessionStatus {
 }
 
 model LiveSession {
-  id          String            @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
   hostId      String
-  host        User              @relation("LiveSessionHost", fields: [hostId], references: [id])
+  host        User    @relation("LiveSessionHost", fields: [hostId], references: [id])
   courseId    String?
-  course      Course?           @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  course      Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   startsAt    DateTime
   endsAt      DateTime
@@ -825,18 +826,18 @@ enum OrderStatus {
 }
 
 model Order {
-  id       String      @id @default(cuid())
-  userId   String
-  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId String
-  course   Course      @relation(fields: [courseId], references: [id])
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course      @relation(fields: [courseId], references: [id])
   amountMinor Int
-  currency String      @default("USD")
-  status   OrderStatus @default(PENDING)
-  provider String      @default("manual") // manual | stripe | paystack | crypto
+  currency    String      @default("USD")
+  status      OrderStatus @default(PENDING)
+  provider    String      @default("manual") // manual | stripe | paystack | crypto
   providerRef String?
-  paidAt   DateTime?
-  createdAt DateTime   @default(now())
+  paidAt      DateTime?
+  createdAt   DateTime    @default(now())
 
   commissions ReferralCommission[]
   invoices    Invoice[]
@@ -856,21 +857,21 @@ enum CommissionStatus {
 /// One row per upline beneficiary per paid order. `level` is 1 for the direct
 /// referrer, 2 for their referrer, and so on up to the configured depth.
 model ReferralCommission {
-  id            String           @id @default(cuid())
+  id            String @id @default(cuid())
   orderId       String
-  order         Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order         Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   beneficiaryId String
-  beneficiary   User             @relation("CommissionBeneficiary", fields: [beneficiaryId], references: [id], onDelete: Cascade)
+  beneficiary   User   @relation("CommissionBeneficiary", fields: [beneficiaryId], references: [id], onDelete: Cascade)
   sourceUserId  String
-  sourceUser    User             @relation("CommissionSource", fields: [sourceUserId], references: [id], onDelete: Cascade)
+  sourceUser    User   @relation("CommissionSource", fields: [sourceUserId], references: [id], onDelete: Cascade)
 
   level       Int
-  ratePercent Int    // stored as basis-of-100, e.g. 10 = 10%
+  ratePercent Int // stored as basis-of-100, e.g. 10 = 10%
   amountMinor Int
-  currency    String @default("USD")
+  currency    String           @default("USD")
   status      CommissionStatus @default(PENDING)
   paidAt      DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime         @default(now())
 
   @@unique([orderId, beneficiaryId])
   @@index([beneficiaryId])
@@ -898,15 +899,15 @@ enum PointsReason {
 /// Append-only ledger. `User.pointsBalance` is the denormalised sum and is
 /// only ever mutated inside the same transaction that appends here.
 model PointsTransaction {
-  id        String       @id @default(cuid())
-  userId    String
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount    Int          // positive = credit, negative = debit
-  reason    PointsReason
+  id           String       @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount       Int // positive = credit, negative = debit
+  reason       PointsReason
   /// Stable key that makes point awards idempotent, e.g. "lesson:<id>".
   referenceKey String?
-  note      String?
-  createdAt DateTime     @default(now())
+  note         String?
+  createdAt    DateTime     @default(now())
 
   @@unique([userId, referenceKey])
   @@index([userId])
@@ -914,15 +915,15 @@ model PointsTransaction {
 }
 
 model Badge {
-  id          String  @id @default(cuid())
-  code        String  @unique
+  id          String @id @default(cuid())
+  code        String @unique
   name        String
   description String
-  iconEmoji   String  @default("🏅")
-  pointsValue Int     @default(0)
+  iconEmoji   String @default("🏅")
+  pointsValue Int    @default(0)
   /// Machine-readable unlock rule, e.g. { "type": "lessons_completed", "count": 10 }.
   criteria    Json?
-  sortOrder   Int     @default(0)
+  sortOrder   Int    @default(0)
 
   users UserBadge[]
 
@@ -952,7 +953,7 @@ model CourseReview {
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rating    Int      // 1–5
+  rating    Int // 1–5
   comment   String?
   createdAt DateTime @default(now())
 
@@ -1012,24 +1013,24 @@ model AuditLog {
 /// learning pathway. Answers are stored as structured JSON so the
 /// questionnaire can evolve without a migration per question.
 model OnboardingProfile {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  knowledgeLevel    String?  // beginner | intermediate | advanced
-  cryptoExperience  String?
-  primaryGoals      String[] // e.g. ["financial_independence", "career"]
-  interests         String[] // pillar slugs
-  weeklyHours       Int?
-  learningStyle     String?
+  knowledgeLevel     String? // beginner | intermediate | advanced
+  cryptoExperience   String?
+  primaryGoals       String[] // e.g. ["financial_independence", "career"]
+  interests          String[] // pillar slugs
+  weeklyHours        Int?
+  learningStyle      String?
   /// Faith and health content are strictly opt-in.
-  wantsFaithContent  Boolean @default(false)
-  wantsHealthContent Boolean @default(false)
-  wantsMentor        Boolean @default(false)
-  answers           Json?
-  completedAt       DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  wantsFaithContent  Boolean   @default(false)
+  wantsHealthContent Boolean   @default(false)
+  wantsMentor        Boolean   @default(false)
+  answers            Json?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@map("onboarding_profiles")
 }
@@ -1039,17 +1040,17 @@ model OnboardingProfile {
 // ===========================================================================
 
 model MentorAssignment {
-  id        String    @id @default(cuid())
-  mentorId  String
-  mentor    User      @relation("MentorOf", fields: [mentorId], references: [id], onDelete: Cascade)
-  menteeId  String
-  mentee    User      @relation("MenteeOf", fields: [menteeId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  mentorId       String
+  mentor         User      @relation("MentorOf", fields: [mentorId], references: [id], onDelete: Cascade)
+  menteeId       String
+  mentee         User      @relation("MenteeOf", fields: [menteeId], references: [id], onDelete: Cascade)
   /// Journals stay private unless the mentee explicitly opts in, per the
   /// privacy boundary in docs/ROLES.md. Revocable at any time.
-  journalConsent Boolean @default(false)
-  isActive  Boolean   @default(true)
-  startedAt DateTime  @default(now())
-  endedAt   DateTime?
+  journalConsent Boolean   @default(false)
+  isActive       Boolean   @default(true)
+  startedAt      DateTime  @default(now())
+  endedAt        DateTime?
 
   sessions MentorSession[]
 
@@ -1158,25 +1159,25 @@ enum ModerationStatus {
 }
 
 model Post {
-  id          String           @id @default(cuid())
-  communityId String
-  community   Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  authorId    String
-  author      User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  type        PostType         @default(DISCUSSION)
-  title       String?
-  body        String
-  attachments Json?
-  tags        String[]
-  isPinned    Boolean          @default(false)
-  isLocked    Boolean          @default(false)
-  status      ModerationStatus @default(VISIBLE)
+  id            String           @id @default(cuid())
+  communityId   String
+  community     Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  type          PostType         @default(DISCUSSION)
+  title         String?
+  body          String
+  attachments   Json?
+  tags          String[]
+  isPinned      Boolean          @default(false)
+  isLocked      Boolean          @default(false)
+  status        ModerationStatus @default(VISIBLE)
   /// Denormalised counters, updated in the same transaction as the row they
   /// count, so a busy thread never needs an aggregate query to render.
-  commentCount  Int            @default(0)
-  reactionCount Int            @default(0)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  commentCount  Int              @default(0)
+  reactionCount Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   comments  Comment[]
   reactions Reaction[]
@@ -1242,21 +1243,21 @@ enum ReportStatus {
 }
 
 model Report {
-  id          String       @id @default(cuid())
-  reporterId  String
-  reporter    User         @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  postId      String?
-  post        Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  commentId   String?
-  comment     Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  reason      String
-  details     String?
-  status      ReportStatus @default(OPEN)
+  id           String       @id @default(cuid())
+  reporterId   String
+  reporter     User         @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  postId       String?
+  post         Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId    String?
+  comment      Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reason       String
+  details      String?
+  status       ReportStatus @default(OPEN)
   resolvedById String?
-  resolvedBy  User?        @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
-  resolution  String?
-  resolvedAt  DateTime?
-  createdAt   DateTime     @default(now())
+  resolvedBy   User?        @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolution   String?
+  resolvedAt   DateTime?
+  createdAt    DateTime     @default(now())
 
   @@index([status])
   @@map("reports")
@@ -1337,23 +1338,23 @@ enum GoalStatus {
 }
 
 model Goal {
-  id           String      @id @default(cuid())
-  userId       String
-  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title        String
-  description  String?
-  area         GrowthArea  @default(LEARNING)
-  horizon      GoalHorizon @default(WEEKLY)
-  targetValue  Int?
-  currentValue Int         @default(0)
-  unit         String?
-  dueAt        DateTime?
-  status       GoalStatus  @default(ACTIVE)
+  id               String      @id @default(cuid())
+  userId           String
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  area             GrowthArea  @default(LEARNING)
+  horizon          GoalHorizon @default(WEEKLY)
+  targetValue      Int?
+  currentValue     Int         @default(0)
+  unit             String?
+  dueAt            DateTime?
+  status           GoalStatus  @default(ACTIVE)
   /// Off by default — a goal is only visible to a mentor if the member says so.
-  sharedWithMentor Boolean @default(false)
-  completedAt  DateTime?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  sharedWithMentor Boolean     @default(false)
+  completedAt      DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
   @@index([userId, status])
   @@map("goals")
@@ -1377,7 +1378,7 @@ model JournalEntry {
   area      GrowthArea?
   title     String?
   body      String
-  mood      Int?        // 1–5, optional self-report
+  mood      Int? // 1–5, optional self-report
   isPrivate Boolean     @default(true)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -1391,16 +1392,16 @@ model JournalEntry {
 // ===========================================================================
 
 model LessonNote {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lessonId      String
-  lesson        Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  body          String
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId     String
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  body         String
   /// Timestamp in the lesson video this note anchors to, if any.
-  videoSeconds  Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  videoSeconds Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([userId, lessonId])
   @@map("lesson_notes")
@@ -1432,18 +1433,18 @@ enum BillingInterval {
 }
 
 model Plan {
-  id           String          @id @default(cuid())
-  name         String
-  slug         String          @unique
-  description  String?
-  priceMinor   Int
-  currency     String          @default("USD")
-  interval     BillingInterval @default(MONTHLY)
-  trialDays    Int             @default(0)
-  features     String[]
-  isActive     Boolean         @default(true)
-  sortOrder    Int             @default(0)
-  createdAt    DateTime        @default(now())
+  id          String          @id @default(cuid())
+  name        String
+  slug        String          @unique
+  description String?
+  priceMinor  Int
+  currency    String          @default("USD")
+  interval    BillingInterval @default(MONTHLY)
+  trialDays   Int             @default(0)
+  features    String[]
+  isActive    Boolean         @default(true)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
 
   subscriptions Subscription[]
 
@@ -1546,19 +1547,19 @@ enum DiscountType {
 }
 
 model Coupon {
-  id            String       @id @default(cuid())
-  code          String       @unique
-  description   String?
-  discountType  DiscountType @default(PERCENT)
+  id             String       @id @default(cuid())
+  code           String       @unique
+  description    String?
+  discountType   DiscountType @default(PERCENT)
   /// Percent (1–100) or minor units, depending on discountType.
-  discountValue Int
-  currency      String?
+  discountValue  Int
+  currency       String?
   maxRedemptions Int?
-  timesRedeemed Int          @default(0)
-  startsAt      DateTime?
-  expiresAt     DateTime?
-  isActive      Boolean      @default(true)
-  createdAt     DateTime     @default(now())
+  timesRedeemed  Int          @default(0)
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
 
   @@map("coupons")
 }
@@ -1572,17 +1573,17 @@ enum ScholarshipStatus {
 }
 
 model Scholarship {
-  id           String            @id @default(cuid())
-  userId       String
-  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  programmeId  String?
-  reason       String
-  status       ScholarshipStatus @default(APPLIED)
-  coveragePercent Int            @default(100)
-  decidedById  String?
-  decidedAt    DateTime?
-  note         String?
-  createdAt    DateTime          @default(now())
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programmeId     String?
+  reason          String
+  status          ScholarshipStatus @default(APPLIED)
+  coveragePercent Int               @default(100)
+  decidedById     String?
+  decidedAt       DateTime?
+  note            String?
+  createdAt       DateTime          @default(now())
 
   @@index([userId])
   @@index([status])
@@ -1608,21 +1609,21 @@ enum TicketPriority {
 }
 
 model SupportTicket {
-  id          String         @id @default(cuid())
-  reference   String         @unique
-  requesterId String
-  requester   User           @relation("TicketRequester", fields: [requesterId], references: [id], onDelete: Cascade)
-  agentId     String?
-  agent       User?          @relation("TicketAgent", fields: [agentId], references: [id], onDelete: SetNull)
-  category    String
-  subject     String
-  status      TicketStatus   @default(OPEN)
-  priority    TicketPriority @default(NORMAL)
-  satisfaction Int?          // 1–5, set by the requester on close
+  id               String         @id @default(cuid())
+  reference        String         @unique
+  requesterId      String
+  requester        User           @relation("TicketRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  agentId          String?
+  agent            User?          @relation("TicketAgent", fields: [agentId], references: [id], onDelete: SetNull)
+  category         String
+  subject          String
+  status           TicketStatus   @default(OPEN)
+  priority         TicketPriority @default(NORMAL)
+  satisfaction     Int? // 1–5, set by the requester on close
   firstRespondedAt DateTime?
-  resolvedAt  DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  resolvedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   messages SupportMessage[]
 
@@ -1632,16 +1633,16 @@ model SupportTicket {
 }
 
 model SupportMessage {
-  id        String        @id @default(cuid())
-  ticketId  String
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  body      String
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body        String
   /// Internal notes are never shown to the requester.
-  isInternal Boolean      @default(false)
+  isInternal  Boolean       @default(false)
   attachments Json?
-  createdAt DateTime      @default(now())
+  createdAt   DateTime      @default(now())
 
   @@index([ticketId])
   @@map("support_messages")
@@ -1654,29 +1655,29 @@ model SupportMessage {
 /// Lets risky or unreviewed capabilities ship dark and be enabled per
 /// environment — the mechanism the compliance gates in docs/ROADMAP.md rely on.
 model FeatureFlag {
-  id          String   @id @default(cuid())
-  key         String   @unique
-  description String
-  isEnabled   Boolean  @default(false)
+  id             String   @id @default(cuid())
+  key            String   @unique
+  description    String
+  isEnabled      Boolean  @default(false)
   /// Optional percentage rollout, 0–100.
-  rolloutPercent Int   @default(0)
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+  rolloutPercent Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
 
   @@map("feature_flags")
 }
 
 model NotificationPreference {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  inAppEnabled  Boolean @default(true)
-  emailEnabled  Boolean @default(true)
-  pushEnabled   Boolean @default(false)
-  smsEnabled    Boolean @default(false)
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  inAppEnabled Boolean  @default(true)
+  emailEnabled Boolean  @default(true)
+  pushEnabled  Boolean  @default(false)
+  smsEnabled   Boolean  @default(false)
   /// Per-type opt-outs, e.g. { "COURSE": false }. Security notifications are
   /// never disableable and are ignored here.
-  mutedTypes    Json?
-  updatedAt DateTime @updatedAt
+  mutedTypes   Json?
+  updatedAt    DateTime @updatedAt
 
   @@map("notification_preferences")
 }

@@ -154,6 +154,9 @@ export async function getCourseForBuilder(actor: Actor, courseId: string) {
               sortOrder: true,
               isPreview: true,
               minWatchPercent: true,
+              minReflectionChars: true,
+              activityTitle: true,
+              activityPrompt: true,
               videoUrl: true,
               videoDuration: true,
               content: true,
@@ -433,18 +436,21 @@ export async function reorderModules(
 export function lessonCompletionGap(lesson: {
   type: string;
   minWatchPercent: number;
+  minReflectionChars: number;
   videoUrl: string | null;
   quiz: unknown;
   assignment: unknown;
 }): string | null {
   if (lesson.quiz || lesson.assignment) return null;
+  // A required write-up is a genuine gate: the learner has to have done the
+  // exercise and said what happened before the lesson will complete.
+  if (lesson.minReflectionChars > 0) return null;
   if (lesson.type === "VIDEO") {
     if (!lesson.videoUrl) return "No video uploaded";
     if (lesson.minWatchPercent <= 0) return "No watch threshold set";
     return null;
   }
-  // A text or live lesson with nothing to submit or pass has no gate at all.
-  return "No quiz, assignment or watch threshold";
+  return "No quiz, assignment or required write-up";
 }
 
 /** Everything blocking submission for review. */
