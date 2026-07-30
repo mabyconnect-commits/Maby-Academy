@@ -3,6 +3,7 @@ import { cryptoFromZero } from "./crypto-from-zero";
 import { moneyThatLasts } from "./money-that-lasts";
 import { strongFoundations } from "./strong-foundations";
 import { characterAndCalling } from "./character-and-calling";
+import { riskFirstTrading } from "./risk-first-trading";
 
 /**
  * The authored curriculum.
@@ -17,6 +18,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   moneyThatLasts,
   strongFoundations,
   characterAndCalling,
+  riskFirstTrading,
 ];
 
 export { loadCourse, loadCourses } from "./load";
