@@ -155,7 +155,10 @@ export default async function DashboardPage() {
         <Card pad="wide">
           <PanelHead
             title="Recent feedback"
-            action={<CardLink href="/dashboard/assignments">All work →</CardLink>}
+            // Points at scores rather than assignments: "recent feedback"
+            // raises the question "so how am I doing overall", and that is
+            // the page that answers it.
+            action={<CardLink href="/dashboard/scores">All scores →</CardLink>}
           />
           {gradedRecently.length === 0 ? (
             <p className="text-xs leading-[1.6] text-mist-400">

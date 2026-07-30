@@ -10,12 +10,12 @@ import {
   StatusPill,
   Textarea,
 } from "@/components/ui";
+import { RichText } from "@/components/RichText";
+import { parseRubric } from "@/lib/rubric";
 import { SubmitButton } from "@/components/SubmitButton";
 import { emptyFormState } from "@/server/actions/formState";
 import { submitAssignmentAction } from "@/server/actions/learning";
 import { formatDate } from "@/lib/utils";
-
-type RubricCriterion = { name: string; description?: string; maxPoints: number };
 
 type Assignment = {
   id: string;
@@ -56,9 +56,7 @@ export function AssignmentForm({
     emptyFormState,
   );
 
-  const rubric = Array.isArray(assignment.rubric)
-    ? (assignment.rubric as RubricCriterion[])
-    : [];
+  const rubric = parseRubric(assignment.rubric);
 
   // Submitted work is frozen while it waits for a grade; a returned
   // submission can be reworked and sent again as a new attempt.
@@ -97,11 +95,11 @@ export function AssignmentForm({
         </div>
       )}
 
-      <div className="mt-5 prose-lesson text-sm">
-        {assignment.instructions.split("\n\n").map((p, i) => (
-          <p key={i}>{p}</p>
-        ))}
-      </div>
+      <RichText
+        content={assignment.instructions}
+        className="mt-5 prose-lesson text-sm"
+        headings={false}
+      />
 
       {rubric.length > 0 && (
         <div className="mt-5">

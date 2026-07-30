@@ -278,6 +278,19 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
       // ---- Assignment -------------------------------------------------
       if (lesson.assignment) {
         const a = lesson.assignment;
+        // The authoring type reads better as criterion/weight/descriptor, but
+        // every consumer — the grading form, the student's scores page, the
+        // authoring UI — expects name/maxPoints/description. Storing the
+        // authoring shape verbatim gave graders a rubric with blank criterion
+        // names, scores keyed under "undefined", and a derived total stuck at
+        // zero on all of the authored courses. Normalise on the way in, so
+        // there is exactly one rubric shape in the database.
+        const rubric = a.rubric.map((c) => ({
+          name: c.criterion,
+          maxPoints: c.weight,
+          description: c.descriptor,
+        }));
+
         await db.assignment.upsert({
           where: { lessonId: lessonRow.id },
           create: {
@@ -286,7 +299,7 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
             instructions: a.instructions,
             maxScore: a.maxScore,
             passScore: a.passScore,
-            rubric: a.rubric,
+            rubric,
             pointsValue: lesson.points ?? 25,
           },
           update: {
@@ -294,7 +307,7 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
             instructions: a.instructions,
             maxScore: a.maxScore,
             passScore: a.passScore,
-            rubric: a.rubric,
+            rubric,
           },
         });
       }

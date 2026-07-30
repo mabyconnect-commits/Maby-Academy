@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getLessonForViewer } from "@/server/services/courses";
 import { getQuizAttempts } from "@/server/services/assessment";
 import { Alert, Card, LinkButton, Pill, ProgressBar } from "@/components/ui";
+import { RichText } from "@/components/RichText";
 import { cn, formatDuration } from "@/lib/utils";
 import { CompleteLessonForm } from "./CompleteLessonForm";
 import { QuizForm } from "./QuizForm";
@@ -127,26 +128,7 @@ export default async function LessonPage({
 
           {/* Written content ------------------------------------------ */}
           {lesson.content && (
-            <div className="mt-8 prose-lesson">
-              {lesson.content.split("\n\n").map((block, i) => {
-                if (block.startsWith("## ")) {
-                  return <h2 key={i}>{block.slice(3)}</h2>;
-                }
-                if (block.startsWith("### ")) {
-                  return <h3 key={i}>{block.slice(4)}</h3>;
-                }
-                if (block.startsWith("- ")) {
-                  return (
-                    <ul key={i} className="list-disc pl-5 space-y-1.5">
-                      {block.split("\n").map((li, j) => (
-                        <li key={j}>{li.replace(/^-\s*/, "")}</li>
-                      ))}
-                    </ul>
-                  );
-                }
-                return <p key={i}>{block}</p>;
-              })}
-            </div>
+            <RichText content={lesson.content} className="mt-8 prose-lesson" />
           )}
 
           {/* Resources ------------------------------------------------- */}

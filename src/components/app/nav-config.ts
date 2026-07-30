@@ -113,6 +113,14 @@ export const NAV: Record<Workspace, NavSection[]> = {
           mobileOrder: 3,
         },
         {
+          // Directly above Certificates, because they answer the same
+          // question at different stages: how am I doing, and did I pass.
+          href: "/dashboard/scores",
+          label: "My scores",
+          short: "Scores",
+          icon: "chart",
+        },
+        {
           href: "/dashboard/certificates",
           label: "Certificates",
           short: "Certs",

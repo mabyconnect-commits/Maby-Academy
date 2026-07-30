@@ -101,6 +101,13 @@
     --color-ink-900: #ffffff;
     --color-ink-850: #ffffff;
     --color-ink-800: #f2f1ee;
+    /* These two were missing, so the sidebar, the mobile nav bar and every
+       `surface-inset` panel kept their near-black dark-mode values on a white
+       page — a dark band with dark text on it. Both are recessed surfaces, so
+       in light mode they sit slightly below the white card rather than above
+       it. */
+    --color-ink-880: #f4f2ed;
+    --color-ink-870: #f6f4ef;
     --color-ink-700: #e3e1dc;
     --color-ink-600: #cecac2;
     --color-ink-500: #aca79c;
@@ -142,6 +149,8 @@
   --color-ink-900: #ffffff;
   --color-ink-850: #ffffff;
   --color-ink-800: #f2f1ee;
+  --color-ink-880: #f4f2ed;
+  --color-ink-870: #f6f4ef;
   --color-ink-700: #e3e1dc;
   --color-ink-600: #cecac2;
   --color-ink-500: #aca79c;
