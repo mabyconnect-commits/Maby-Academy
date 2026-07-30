@@ -5,6 +5,7 @@ import { strongFoundations } from "./strong-foundations";
 import { characterAndCalling } from "./character-and-calling";
 import { riskFirstTrading } from "./risk-first-trading";
 import { readingTheChain } from "./reading-the-chain";
+import { skillToIncome } from "./skill-to-income";
 
 /**
  * The authored curriculum.
@@ -21,6 +22,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   characterAndCalling,
   riskFirstTrading,
   readingTheChain,
+  skillToIncome,
 ];
 
 export { loadCourse, loadCourses } from "./load";
