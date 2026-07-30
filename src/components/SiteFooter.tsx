@@ -14,9 +14,11 @@ const COLUMNS = [
   {
     title: "Academy",
     links: [
+      { href: "/about", label: "About" },
+      { href: "/schools", label: "Schools" },
+      { href: "/pricing", label: "Pricing" },
+      { href: "/faq", label: "FAQ" },
       { href: "/dashboard", label: "My dashboard" },
-      { href: "/dashboard/live", label: "Live sessions" },
-      { href: "/dashboard/rewards", label: "Rewards & leaderboard" },
       { href: "/dashboard/referrals", label: "Referral programme" },
     ],
   },
