@@ -14,6 +14,7 @@ import { stablecoinsAndBorders } from "./stablecoins-and-borders";
 import { marketStructure } from "./market-structure";
 import { leverageWithoutRuin } from "./leverage-without-ruin";
 import { tokenomics } from "./tokenomics";
+import { buildTheBusiness } from "./build-the-business";
 
 /**
  * The authored curriculum.
@@ -39,6 +40,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   marketStructure,
   leverageWithoutRuin,
   tokenomics,
+  buildTheBusiness,
 ];
 
 export { loadCourse, loadCourses } from "./load";
