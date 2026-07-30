@@ -2,6 +2,7 @@ import type { ContentCourse } from "./types";
 import { cryptoFromZero } from "./crypto-from-zero";
 import { moneyThatLasts } from "./money-that-lasts";
 import { strongFoundations } from "./strong-foundations";
+import { characterAndCalling } from "./character-and-calling";
 
 /**
  * The authored curriculum.
@@ -15,6 +16,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   cryptoFromZero,
   moneyThatLasts,
   strongFoundations,
+  characterAndCalling,
 ];
 
 export { loadCourse, loadCourses } from "./load";
