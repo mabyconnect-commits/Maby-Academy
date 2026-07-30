@@ -6,8 +6,9 @@ import {
   listSessions,
   recentSecurityActivity,
 } from "@/server/services/security";
-import { Card, SectionHeading } from "@/components/ui";
+import { Button, Card, PanelHead, SectionHeading } from "@/components/ui";
 import { formatDate } from "@/lib/utils";
+import { logoutAction } from "@/server/actions/auth";
 import { ProfileForm } from "./ProfileForm";
 import { PasswordForm } from "./PasswordForm";
 import { SessionList } from "./SessionList";
@@ -131,6 +132,24 @@ export default async function SettingsPage() {
             ))}
           </ul>
         )}
+      </Card>
+
+      {/* Sign out lives here as well as in the header menu. Settings is where
+          people look for it, and it must be reachable at every screen size —
+          it was previously only in the desktop sidebar, which meant there was
+          no way to sign out on a phone at all. */}
+      <Card>
+        <PanelHead title="Sign out" className="mb-2" />
+        <p className="text-[11.5px] leading-[1.65] text-mist-400">
+          Signs out this device only. To sign out everywhere — after losing a
+          device, or if you suspect someone else has access — use sign-out
+          everywhere in the sessions list above, and change your password.
+        </p>
+        <form action={logoutAction} className="mt-4">
+          <Button type="submit" variant="secondary">
+            Sign out
+          </Button>
+        </form>
       </Card>
     </div>
   );

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { LogoMark } from "@/components/Brand";
 import { StreakPill, XpPill } from "@/components/ui";
+import { AccountMenu } from "./AccountMenu";
 import { titleFor, type Workspace } from "./nav-config";
 
 /**
@@ -21,6 +22,7 @@ export function AppHeader({
   points,
   level,
   showPills,
+  user,
 }: {
   workspace: Workspace;
   streak: number;
@@ -28,6 +30,7 @@ export function AppHeader({
   level: number;
   /** Only the learner workspace carries progress pills. */
   showPills: boolean;
+  user: { name: string; roleLabel: string; avatarUrl: string | null };
 }) {
   const pathname = usePathname();
   const title = titleFor(workspace, pathname);
@@ -59,6 +62,13 @@ export function AppHeader({
         >
           <Icon name="search" size={17} />
         </Link>
+        {/* Phones only — on desktop the account row lives in the sidebar
+            footer. Without this there was no way to sign out on mobile. */}
+        <AccountMenu
+          name={user.name}
+          roleLabel={user.roleLabel}
+          avatarUrl={user.avatarUrl}
+        />
       </div>
     </header>
   );

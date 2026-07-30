@@ -83,6 +83,11 @@ export async function AppShell({
           points={user.lifetimePoints}
           level={levelFor(user.lifetimePoints).number}
           showPills={workspace === "learn"}
+          user={{
+            name: user.name,
+            roleLabel: user.role.replace(/_/g, " ").toLowerCase(),
+            avatarUrl: user.avatarUrl,
+          }}
         />
         {/* Bottom padding clears the mobile bar so the last card on a page is
             never trapped underneath it. */}

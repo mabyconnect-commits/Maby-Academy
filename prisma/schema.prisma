@@ -406,6 +406,11 @@ model Course {
   /// Percentage of lessons that must be complete before a certificate issues.
   passThreshold  Int          @default(80)
 
+  /// "What you'll be able to do" — concrete capabilities, not topics covered.
+  /// Shown on the course page and used by instructors to keep a course honest
+  /// about what it delivers.
+  outcomes       String[]     @default([])
+
   categoryId   String
   category     Category @relation(fields: [categoryId], references: [id])
   instructorId String
@@ -484,6 +489,15 @@ model Lesson {
   /// student must have watched at least this share before completion is
   /// accepted; 0 disables the check.
   minWatchPercent Int @default(0)
+
+  /// An in-lesson exercise. Not instructor-graded — the learner does the work
+  /// and writes what happened. This is the completion condition for a written
+  /// lesson that has no quiz or assignment, and without it such a lesson would
+  /// complete simply by being opened.
+  activityTitle   String?
+  activityPrompt  String?
+  /// Minimum characters of reflection required to complete. 0 disables it.
+  minReflectionChars Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -564,6 +578,9 @@ model LessonProgress {
   @@index([userId])
   @@index([lessonId])
   @@map("lesson_progress")
+  /// The learner's own write-up of the lesson's activity. Private to them and
+  /// their consented mentor — it is not coursework and is never graded.
+  reflection    String?
 }
 
 // ===========================================================================

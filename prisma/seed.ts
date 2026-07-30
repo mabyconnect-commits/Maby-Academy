@@ -13,6 +13,7 @@ import {
 } from "../src/lib/auth/permissions";
 import bcrypt from "bcryptjs";
 import { randomBytes, createHmac } from "node:crypto";
+import { AUTHORED_COURSES, loadCourses } from "./content";
 
 const db = new PrismaClient();
 
@@ -707,6 +708,18 @@ async function main() {
     }
   }
   console.log(`  ✓ ${courseSeed.length} courses with modules, lessons, quizzes and assignments`);
+
+  // -------------------------------------------------------------------
+  // Authored curriculum
+  //
+  // Full write-up courses live in prisma/content as data, one file per course,
+  // and are loaded here. The loader upserts in place on stable natural keys, so
+  // re-running the seed updates the curriculum without recreating lessons —
+  // which matters because LessonProgress points at a lesson id, and recreating
+  // lessons would silently reset every student's completion.
+  // -------------------------------------------------------------------
+  console.log("→ Loading authored curriculum…");
+  await loadCourses(db, AUTHORED_COURSES);
 
   // -------------------------------------------------------------------
   // Live sessions
