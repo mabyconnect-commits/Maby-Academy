@@ -1,5 +1,6 @@
 import type { ContentCourse } from "./types";
 import { cryptoFromZero } from "./crypto-from-zero";
+import { moneyThatLasts } from "./money-that-lasts";
 
 /**
  * The authored curriculum.
@@ -9,7 +10,7 @@ import { cryptoFromZero } from "./crypto-from-zero";
  * the skeleton and this becomes the content. That precedence is why the loader
  * updates in place rather than recreating: student progress must survive it.
  */
-export const AUTHORED_COURSES: ContentCourse[] = [cryptoFromZero];
+export const AUTHORED_COURSES: ContentCourse[] = [cryptoFromZero, moneyThatLasts];
 
 export { loadCourse, loadCourses } from "./load";
 export type { ContentCourse, ContentLesson, ContentModule } from "./types";
