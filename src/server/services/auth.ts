@@ -8,20 +8,18 @@ import {
   verifyPassword,
 } from "@/lib/auth/tokens";
 import type { RegisterInput } from "@/lib/validation";
+import { ServiceError } from "@/lib/errors";
 import { findReferrerByCode, recordSignupReferral } from "./referrals";
 import { notify } from "./notifications";
 import { evaluateBadges } from "./rewards";
 
-export class ServiceError extends Error {
-  constructor(
-    message: string,
-    readonly status = 400,
-    readonly field?: string,
-  ) {
-    super(message);
-    this.name = "ServiceError";
-  }
-}
+/**
+ * Re-exported from `lib/errors` so every existing `from "./auth"` import keeps
+ * working. The class itself had to move out of this module: `formState.ts`
+ * needs it and is imported by client components, which dragged this
+ * `server-only` file into the browser bundle.
+ */
+export { ServiceError };
 
 /** Referral codes are random; retry on the astronomically unlikely collision. */
 async function uniqueReferralCode(name: string) {

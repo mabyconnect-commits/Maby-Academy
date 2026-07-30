@@ -31,7 +31,7 @@ export default async function ModerationPage() {
 
       {reports.length === 0 ? (
         <EmptyState
-          icon="🛡"
+          icon="shield"
           title="Nothing reported"
           description="The community is behaving. Reports appear here the moment a member flags something."
           action={<LinkButton href="/admin">Back to overview</LinkButton>}

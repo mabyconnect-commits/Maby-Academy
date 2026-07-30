@@ -88,14 +88,13 @@ export default async function AdminOverviewPage() {
       </header>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <StatTile label="Courses" value={courseCount} icon="📚" />
-        <StatTile label="Enrolments" value={studentCount} icon="👥" />
-        <StatTile label="Awaiting grade" value={pendingCount} icon="✍" />
-        <StatTile label="Certificates" value={certificateCount} icon="🎓" />
+        <StatTile label="Courses" value={courseCount} />
+        <StatTile label="Enrolments" value={studentCount} />
+        <StatTile label="Awaiting grade" value={pendingCount} />
+        <StatTile label="Certificates" value={certificateCount} />
         <StatTile
           label="Revenue"
           value={formatMoney(revenue._sum.amountMinor ?? 0)}
-          icon="💰"
         />
       </div>
 

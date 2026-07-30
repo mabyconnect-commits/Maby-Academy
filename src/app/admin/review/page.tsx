@@ -39,7 +39,7 @@ export default async function ReviewQueuePage() {
 
       {queue.length === 0 ? (
         <EmptyState
-          icon="✅"
+          icon="check"
           title="Nothing waiting on review"
           description="Every submitted course has been reviewed. Instructors will appear here when they submit new material."
           action={<LinkButton href="/admin">Back to overview</LinkButton>}

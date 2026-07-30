@@ -256,7 +256,73 @@ export async function getDashboardSummary(userId: string) {
   ]);
 
   const active = enrollments.filter((e) => e.status === "ACTIVE");
-  const resume = active.find((e) => e.lastLessonId) ?? active[0] ?? null;
+  const resumeEnrolment = active.find((e) => e.lastLessonId) ?? active[0] ?? null;
+
+  /**
+   * The lesson the Resume button should open. Without this the button lands on
+   * the course overview and the member has to find their place again — which
+   * defeats the point of tracking a resume position at all.
+   *
+   * Preference order: the first incomplete lesson in course order, else the
+   * last lesson touched (so a finished course reopens where they left off).
+   */
+  const nextLesson = resumeEnrolment
+    ? ((await db.lesson.findFirst({
+        where: {
+          module: { courseId: resumeEnrolment.courseId },
+          NOT: { progress: { some: { userId, isCompleted: true } } },
+        },
+        orderBy: [{ module: { sortOrder: "asc" } }, { sortOrder: "asc" }],
+        select: { slug: true, title: true },
+      })) ??
+      (resumeEnrolment.lastLessonId
+        ? await db.lesson.findUnique({
+            where: { id: resumeEnrolment.lastLessonId },
+            select: { slug: true, title: true },
+          })
+        : null))
+    : null;
+
+  const resume = resumeEnrolment ? { ...resumeEnrolment, nextLesson } : null;
+
+  /**
+   * The next assignment with a real deadline. Overdue work is deliberately
+   * excluded: a permanently red "3 days overdue" card becomes wallpaper, and
+   * overdue items belong on the assignments page where they can be acted on.
+   */
+  const nextDue = await db.assignment.findFirst({
+    where: {
+      dueAt: { gte: now },
+      lesson: {
+        module: { course: { enrollments: { some: { userId, status: "ACTIVE" } } } },
+      },
+      // Already submitted work is not "due".
+      NOT: { submissions: { some: { studentId: userId } } },
+    },
+    orderBy: { dueAt: "asc" },
+    select: {
+      title: true,
+      dueAt: true,
+      lesson: {
+        select: {
+          slug: true,
+          module: { select: { course: { select: { slug: true } } } },
+        },
+      },
+    },
+  });
+
+  const dueSoon =
+    nextDue?.dueAt != null
+      ? {
+          title: nextDue.title,
+          daysLeft: Math.max(
+            0,
+            Math.ceil((nextDue.dueAt.getTime() - now.getTime()) / 86_400_000),
+          ),
+          href: `/courses/${nextDue.lesson.module.course.slug}/lessons/${nextDue.lesson.slug}`,
+        }
+      : null;
 
   return {
     user,
@@ -270,6 +336,7 @@ export async function getDashboardSummary(userId: string) {
       unreadCount,
     },
     resume,
+    dueSoon,
     gradedRecently,
     upcomingSessions,
   };

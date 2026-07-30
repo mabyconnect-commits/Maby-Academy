@@ -60,24 +60,20 @@ export default async function ReferralsPage() {
         <StatTile
           label="Direct referrals"
           value={data.directReferrals.length}
-          icon="🤝"
           hint="Level 1"
         />
         <StatTile
           label="Network"
           value={data.directReferrals.length + data.level2Count}
-          icon="🌐"
           hint={`${data.level2Count} at level 2`}
         />
         <StatTile
           label="Pending"
           value={formatMoney(data.earnings.pending)}
-          icon="⏳"
         />
         <StatTile
           label="Total earned"
           value={formatMoney(data.earnings.total)}
-          icon="💰"
           hint={`${formatMoney(data.earnings.paid)} paid out`}
         />
       </div>
@@ -116,7 +112,7 @@ export default async function ReferralsPage() {
 
         {data.directReferrals.length === 0 ? (
           <EmptyState
-            icon="🤝"
+            icon="handshake"
             title="No referrals yet"
             description="Share your link with people who are serious about growth. You earn points the moment they join, and commission when they buy."
           />

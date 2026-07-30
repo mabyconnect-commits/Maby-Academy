@@ -459,3 +459,66 @@ export async function getGrowthOverview(userId: string) {
     areas: [...areas.entries()].map(([area, counts]) => ({ area, ...counts })),
   };
 }
+
+/**
+ * Trade write-ups for the Web3 tools page.
+ *
+ * These are `REVIEW` journal entries rather than a separate table. A trade
+ * journal *is* a review of a decision you made, it needs exactly the same
+ * privacy guarantees as the rest of the journal, and giving it its own table
+ * would mean re-deriving those guarantees somewhere new — which is how the
+ * private-by-default rule gets quietly broken.
+ */
+export async function listTradeNotes(userId: string, take = 5) {
+  return db.journalEntry.findMany({
+    where: { userId, kind: "REVIEW" },
+    orderBy: { createdAt: "desc" },
+    take,
+    // Body is deliberately not selected: the tools page lists entries, it does
+    // not display their contents.
+    select: { id: true, title: true, createdAt: true },
+  });
+}
+
+/**
+ * Goals a mentee has explicitly shared with their mentor.
+ *
+ * Two conditions, both required: the goal carries `sharedWithMentor`, *and* the
+ * requesting mentor has an active assignment to that member. Checking only the
+ * flag would expose a shared goal to every mentor on the platform; checking
+ * only the assignment would expose goals the member never shared.
+ *
+ * There is no journal equivalent of this function on purpose — journal access
+ * runs through `policy.canReadJournal`, which additionally requires per-
+ * assignment consent.
+ */
+export async function listSharedGoalsForMentor(mentorId: string) {
+  const goals = await db.goal.findMany({
+    where: {
+      sharedWithMentor: true,
+      status: "ACTIVE",
+      user: {
+        menteeAssignments: { some: { mentorId, isActive: true } },
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      area: true,
+      targetValue: true,
+      currentValue: true,
+      dueAt: true,
+      user: { select: { id: true, name: true } },
+    },
+  });
+
+  return goals.map((g) => ({
+    ...g,
+    // Derived rather than stored, so it cannot disagree with the values.
+    progressPercent:
+      g.targetValue && g.targetValue > 0
+        ? Math.min(100, Math.round((g.currentValue / g.targetValue) * 100))
+        : 0,
+  }));
+}

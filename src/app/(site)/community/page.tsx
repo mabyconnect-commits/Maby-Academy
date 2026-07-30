@@ -47,7 +47,7 @@ export default async function CommunityIndexPage() {
       <div className="mt-8 space-y-3">
         {communities.length === 0 ? (
           <EmptyState
-            icon="💬"
+            icon="users"
             title="No communities yet"
             description="Rooms will appear here as the academy opens them."
           />

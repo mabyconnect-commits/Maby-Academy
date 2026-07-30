@@ -131,7 +131,7 @@ export default async function CoursesPage({
       {courses.length === 0 ? (
         <div className="mt-5">
           <EmptyState
-            icon="🔍"
+            icon="search"
             title="Nothing matches those filters"
             description="Try a different pillar, level or search term — or browse the whole catalogue."
             action={

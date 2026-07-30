@@ -62,7 +62,7 @@ export default async function JournalPage() {
       <section className="space-y-3">
         {entries.length === 0 ? (
           <EmptyState
-            icon="📓"
+            icon="journal"
             title="Nothing written yet"
             description="Start with one line about today. What went well, what didn't, and the one thing you'd change tomorrow."
           />

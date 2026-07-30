@@ -1,31 +1,43 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { Icon, type IconName } from "@/components/Icon";
 import { cn, initials } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Button
 // ---------------------------------------------------------------------------
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "growth";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "growth"
+  | "dashed";
 type ButtonSize = "sm" | "md" | "lg";
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 font-medium rounded-[9px] transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
+  "inline-flex items-center justify-center gap-2 rounded-[var(--radius-btn)] font-bold transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-gold-500 text-ink-950 font-semibold hover:bg-gold-400",
-  // Outlined, matching the design's "Share to LinkedIn" secondary action.
+  primary: "bg-gold-500 text-ink-950 hover:bg-gold-400",
+  // Outlined. The design's secondary is a white hairline that turns gold on
+  // hover — border carries state, never a shadow or a fill.
   secondary:
-    "bg-transparent text-mist-100 border border-ink-600 hover:border-gold-600/60 hover:text-gold-300",
-  ghost: "text-mist-300 hover:text-mist-100 hover:bg-ink-800",
+    "border border-rule-strong bg-transparent text-mist-100 hover:border-gold-500 hover:text-gold-400",
+  ghost: "font-semibold text-mist-300 hover:bg-ink-800 hover:text-mist-100",
   danger: "bg-flag-500 text-white hover:bg-flag-400",
-  growth: "bg-growth-500 text-ink-950 font-semibold hover:bg-growth-400",
+  growth: "bg-growth-500 text-ink-950 hover:bg-growth-400",
+  /** Dashed gold outline — the design's "+ Add a habit" affordance. */
+  dashed:
+    "w-full border border-dashed border-gold-500/40 bg-transparent font-semibold text-gold-500 hover:bg-gold-500/8",
 };
 
+/** Padding and type sizes taken from the design's button specimens. */
 const BUTTON_SIZES: Record<ButtonSize, string> = {
-  sm: "text-sm px-3 py-1.5",
-  md: "text-sm px-4 py-2.5",
-  lg: "text-base px-6 py-3",
+  sm: "px-4 py-2.5 text-[11px]",
+  md: "px-4 py-3 text-xs",
+  lg: "px-6 py-[15px] text-[13px]",
 };
 
 export function buttonClass(
@@ -61,22 +73,87 @@ export function LinkButton({
 // Surfaces
 // ---------------------------------------------------------------------------
 
-type CardVariant = "default" | "gold" | "raised";
+type CardVariant = "default" | "gold" | "raised" | "inset";
 
 const CARD_SURFACES: Record<CardVariant, string> = {
   default: "surface",
   // Reserved for the single most important thing on a screen.
   gold: "surface-gold",
   raised: "surface-raised",
+  // A card inside a card.
+  inset: "surface-inset",
 };
 
+/**
+ * Panel padding is 22px, matching the design's card specimens — with `pad`
+ * available for the two exceptions: the wide clamped panels (18px on a phone
+ * rising to 24px) and the tiles, which sit tighter at 18px.
+ */
 export function Card({
   variant = "default",
+  pad = "default",
   className,
   ...props
-}: ComponentProps<"div"> & { variant?: CardVariant }) {
+}: ComponentProps<"div"> & {
+  variant?: CardVariant;
+  pad?: "default" | "wide" | "tight" | "none";
+}) {
+  const padding = {
+    default: "p-[22px]",
+    wide: "p-[18px] sm:p-6",
+    tight: "p-[18px]",
+    none: "",
+  }[pad];
+
   return (
-    <div className={cn(CARD_SURFACES[variant], "p-5", className)} {...props} />
+    <div className={cn(CARD_SURFACES[variant], padding, className)} {...props} />
+  );
+}
+
+/**
+ * The panel heading used at the top of nearly every card in the design: a
+ * 700-weight 13–14px title with an optional gold text action on the right.
+ */
+export function PanelHead({
+  title,
+  meta,
+  action,
+  className,
+}: {
+  title: ReactNode;
+  meta?: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "mb-4 flex flex-wrap items-center justify-between gap-2.5",
+        className,
+      )}
+    >
+      <span className="text-sm font-bold text-mist-100">{title}</span>
+      {meta}
+      {action}
+    </div>
+  );
+}
+
+/** The recurring "View all →" affordance. Gold, 11px, semibold. */
+export function CardLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="text-[11px] font-semibold whitespace-nowrap text-gold-500 transition-colors hover:text-gold-400"
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -88,10 +165,10 @@ export function Card({
 export function StreakPill({ days }: { days: number }) {
   if (days <= 0) return null;
   return (
-    <Pill tone="ember" className="whitespace-nowrap">
+    <Pill tone="ember" className="px-3 py-2 whitespace-nowrap">
+      <Icon name="flame" size={11} strokeWidth={2.2} />
       {/* Abbreviated on phones — the full phrase wraps to two lines in a
           16px-tall header, which looks broken. */}
-      <span aria-hidden>▲</span>
       <span className="sm:hidden">{days}d</span>
       <span className="hidden sm:inline">{days}-day streak</span>
       <span className="sr-only">{days} day streak</span>
@@ -101,7 +178,7 @@ export function StreakPill({ days }: { days: number }) {
 
 export function XpPill({ points, level }: { points: number; level?: number }) {
   return (
-    <Pill tone="gold" className="whitespace-nowrap">
+    <Pill tone="gold" className="px-3 py-2 whitespace-nowrap">
       {/* Wrapped in one span so Pill's flex gap doesn't land between the XP
           total and the level, on top of the separator's own spaces. */}
       <span>
@@ -135,23 +212,23 @@ export function SectionHeading({
 }
 
 export function EmptyState({
-  icon = "✨",
+  icon = "spark",
   title,
   description,
   action,
 }: {
-  icon?: string;
+  icon?: IconName;
   title: string;
   description: string;
   action?: ReactNode;
 }) {
   return (
     <div className="surface p-10 text-center">
-      <div className="text-3xl mb-3" aria-hidden>
-        {icon}
+      <div className="mx-auto mb-4 grid size-11 place-items-center rounded-full border border-gold-500/35 bg-gold-500/10 text-gold-500">
+        <Icon name={icon} size={18} strokeWidth={2} />
       </div>
-      <h3 className="font-semibold text-mist-100">{title}</h3>
-      <p className="text-sm text-mist-400 mt-1.5 max-w-md mx-auto">{description}</p>
+      <h3 className="font-bold text-mist-100">{title}</h3>
+      <p className="mx-auto mt-1.5 max-w-md text-sm text-mist-400">{description}</p>
       {action && <div className="mt-5 flex justify-center">{action}</div>}
     </div>
   );
@@ -174,19 +251,29 @@ const TONES: Record<Tone, string> = {
   info: "bg-info-500/12 text-info-500 border-transparent",
 };
 
+/**
+ * `round` is the default 999px chip. `tag` is the design's squarer 4px variant,
+ * used for state labels that sit beside a heading rather than in a row of
+ * chips — ENCRYPTED, SHARED.
+ */
 export function Pill({
   tone = "neutral",
+  shape = "round",
   className,
   children,
 }: {
   tone?: Tone;
+  shape?: "round" | "tag";
   className?: string;
   children: ReactNode;
 }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold leading-none",
+        "inline-flex items-center gap-1 border text-[11px] leading-none font-bold",
+        shape === "round"
+          ? "rounded-full px-2.5 py-1"
+          : "rounded-[4px] px-2 py-[5px] text-[9px] tracking-[0.08em] uppercase",
         TONES[tone],
         className,
       )}
@@ -245,23 +332,29 @@ export function ProgressBar({
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <div
-        className="h-1.5 flex-1 rounded-full bg-ink-700 overflow-hidden"
+        // 6px track on a 8%-white rail, per the design's data-display spec.
+        className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-mist-100/8"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label="Course progress"
       >
+        {/* Gold *gradient* fill, deep gold into brand gold left to right. A
+            flat fill reads as a plain meter; the gradient is what makes the
+            bar feel like the design's. Green only once it is finished. */}
         <div
           className={cn(
-            "h-full rounded-full transition-[width] duration-500",
-            pct >= 100 ? "bg-growth-500" : "bg-gold-500",
+            "h-full rounded-[3px] transition-[width] duration-500",
+            pct >= 100
+              ? "bg-growth-500"
+              : "bg-gradient-to-r from-gold-600 to-gold-500",
           )}
           style={{ width: `${pct}%` }}
         />
       </div>
       {showLabel && (
-        <span className="text-xs tabular-nums text-mist-400 w-9 text-right">
+        <span className="w-9 text-right text-xs font-bold text-gold-500 tabular-nums">
           {pct}%
         </span>
       )}
@@ -269,40 +362,40 @@ export function ProgressBar({
   );
 }
 
+/**
+ * The design's stat tile leads with the number, not the label: an 800-weight
+ * 24px figure with the label in 11px underneath. That order is deliberate — a
+ * row of these is meant to be readable at a glance, and a label-first tile
+ * makes you read four captions before you see any data.
+ */
 export function StatTile({
   label,
   value,
   hint,
-  icon,
-  accent = false,
+  tone = "default",
 }: {
   label: string;
   value: string | number;
   hint?: string;
-  icon?: string;
-  accent?: boolean;
+  tone?: "default" | "gold" | "growth" | "ember" | "flag";
 }) {
+  const valueTone = {
+    default: "text-mist-100",
+    gold: "text-gold-500",
+    growth: "text-growth-500",
+    ember: "text-ember-500",
+    flag: "text-flag-500",
+  }[tone];
+
   return (
-    <div className={cn(accent ? "surface-gold" : "surface", "p-4")}>
-      <div className="flex items-center justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-mist-400">
-          {label}
-        </p>
-        {icon && (
-          <span className="text-base" aria-hidden>
-            {icon}
-          </span>
-        )}
-      </div>
-      <p
-        className={cn(
-          "mt-2 text-2xl font-bold tabular-nums",
-          accent ? "text-gold-400" : "text-mist-100",
-        )}
-      >
+    <div className="surface rounded-[var(--radius-tile)] p-[18px]">
+      <p className={cn("text-2xl leading-none font-extrabold tabular-nums", valueTone)}>
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-mist-400">{hint}</p>}
+      <p className="mt-[7px] text-[11px] leading-[1.4] font-medium text-mist-400">
+        {label}
+      </p>
+      {hint && <p className="mt-1.5 text-[10.5px] text-mist-400/80">{hint}</p>}
     </div>
   );
 }
@@ -311,6 +404,11 @@ export function StatTile({
 // Forms
 // ---------------------------------------------------------------------------
 
+/**
+ * The design labels every field in wide-tracked uppercase 11px rather than
+ * sentence-case — it is the same eyebrow treatment as section labels, which is
+ * what makes a long form read as a single system.
+ */
 export function Field({
   label,
   htmlFor,
@@ -325,8 +423,11 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-mist-200">
+    <div className="space-y-[7px]">
+      <label
+        htmlFor={htmlFor}
+        className="block text-[11px] font-semibold tracking-[0.1em] text-mist-300 uppercase"
+      >
         {label}
       </label>
       {children}
@@ -340,8 +441,13 @@ export function Field({
   );
 }
 
+/**
+ * Controls sit on the *page* background, not the card background — a darker
+ * well inside a lighter card. That inversion is what makes an input read as
+ * recessed without a shadow.
+ */
 const CONTROL =
-  "w-full rounded-[9px] bg-ink-900 border border-ink-600 px-3.5 py-2.5 text-sm text-mist-100 placeholder:text-mist-400/60 focus:border-gold-500 transition-colors";
+  "w-full rounded-[var(--radius-control)] border border-rule-strong bg-ink-950 px-3.5 py-3.5 text-[13px] font-medium text-mist-100 transition-colors placeholder:text-mist-400/60 focus:border-gold-500";
 
 export function Input({ className, ...props }: ComponentProps<"input">) {
   return <input className={cn(CONTROL, className)} {...props} />;

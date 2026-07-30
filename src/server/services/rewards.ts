@@ -242,3 +242,22 @@ export async function getRewardsOverview(userId: string) {
 
   return { user, transactions, badges, rank, totalStudents };
 }
+
+/**
+ * The most recently earned badges, newest first — for the dashboard rail.
+ *
+ * Reads `UserBadge` rather than `Badge`, so it shows what this member actually
+ * earned and when, not the catalogue of what exists.
+ */
+export async function listRecentBadges(userId: string, take = 3) {
+  return db.userBadge.findMany({
+    where: { userId },
+    orderBy: { awardedAt: "desc" },
+    take,
+    select: {
+      id: true,
+      awardedAt: true,
+      badge: { select: { name: true, description: true, iconEmoji: true } },
+    },
+  });
+}

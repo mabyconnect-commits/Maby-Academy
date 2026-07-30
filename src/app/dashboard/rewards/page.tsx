@@ -85,23 +85,19 @@ export default async function RewardsPage() {
         <StatTile
           label="Points balance"
           value={overview.user?.pointsBalance.toLocaleString() ?? 0}
-          icon="⚡"
         />
         <StatTile
           label="Lifetime points"
           value={overview.user?.lifetimePoints.toLocaleString() ?? 0}
-          icon="📈"
         />
         <StatTile
           label="Current streak"
           value={`${overview.user?.currentStreak ?? 0}d`}
-          icon="🔥"
           hint={`best ${overview.user?.longestStreak ?? 0}d`}
         />
         <StatTile
           label="Rank"
           value={overview.rank ? `#${overview.rank}` : "—"}
-          icon="🏆"
           hint={`of ${overview.totalStudents}`}
         />
       </div>

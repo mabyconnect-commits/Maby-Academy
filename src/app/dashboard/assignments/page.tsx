@@ -40,7 +40,7 @@ export default async function AssignmentsPage() {
 
       {assignments.length === 0 ? (
         <EmptyState
-          icon="✍"
+          icon="edit"
           title="No assignments yet"
           description="Assignments appear here once you enrol in a course that has them."
           action={<LinkButton href="/courses">Browse courses</LinkButton>}

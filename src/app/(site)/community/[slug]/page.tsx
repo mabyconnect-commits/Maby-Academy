@@ -129,7 +129,7 @@ export default async function CommunityPage({
       <div className="mt-8 space-y-3">
         {posts.length === 0 ? (
           <EmptyState
-            icon="💬"
+            icon="users"
             title="No posts yet"
             description="Be the first. Introduce yourself, or ask the thing you're actually stuck on."
           />

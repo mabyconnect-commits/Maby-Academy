@@ -116,8 +116,11 @@ export async function getGradingQueue(grader: {
   id: string;
   role: string;
 }) {
+  // SUPER_ADMIN must be included: scoping a super admin to courses they
+  // personally authored hid the whole queue from the one role that is meant to
+  // see all of it.
   const courseFilter =
-    grader.role === "ADMIN"
+    grader.role === "ADMIN" || grader.role === "SUPER_ADMIN"
       ? {}
       : {
           assignment: {

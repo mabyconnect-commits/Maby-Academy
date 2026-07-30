@@ -57,7 +57,7 @@ export default function AuthLayout({
 
         <p className="mt-10 text-center text-xs text-mist-400">
           <Link href="/" className="hover:text-mist-200">
-            ← Back to maby academy
+            ← Back to Maby Academy
           </Link>
         </p>
       </main>

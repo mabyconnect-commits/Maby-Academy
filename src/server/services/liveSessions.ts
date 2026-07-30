@@ -30,6 +30,8 @@ export async function listPastSessions(limit = 12) {
     include: {
       host: { select: { name: true, avatarUrl: true } },
       course: { select: { title: true, slug: true } },
+      // Attendance is what makes a past session worth listing to a host.
+      _count: { select: { rsvps: true } },
     },
   });
 }

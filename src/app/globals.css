@@ -8,9 +8,13 @@
    ========================================================================== */
 
 @theme {
-  /* Surfaces — a true near-black base with warm-neutral cards above it. */
+  /* Surfaces — a true near-black base with warm-neutral cards above it.
+     These are the design file's literal values; ink-870 is the sidebar and
+     ink-880 the inset panel used for goal and journal rows inside a card. */
   --color-ink-950: #0b0b0d;
   --color-ink-900: #0e0e11;
+  --color-ink-880: #0f0f12;
+  --color-ink-870: #101013;
   --color-ink-850: #141417;
   --color-ink-800: #17171b;
   --color-ink-700: #26262b;
@@ -59,7 +63,15 @@
     Roboto, sans-serif;
   --font-serif: var(--font-cormorant), Georgia, "Times New Roman", serif;
 
+  /* The design's literal radius ladder. Panels 14, tiles and tracks 12, inset
+     panels 11, rows 9, controls and nav 7, buttons 6, auth cards 16. */
   --radius-card: 14px;
+  --radius-tile: 12px;
+  --radius-inset: 11px;
+  --radius-row: 9px;
+  --radius-control: 7px;
+  --radius-btn: 6px;
+  --radius-panel: 16px;
 }
 
 /* ==========================================================================
@@ -85,7 +97,7 @@
   :root:not([data-theme="dark"]) {
     color-scheme: light;
 
-    --color-ink-950: #faf9f7;
+    --color-ink-950: #faf8f3;
     --color-ink-900: #ffffff;
     --color-ink-850: #ffffff;
     --color-ink-800: #f2f1ee;
@@ -126,7 +138,7 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --color-ink-950: #faf9f7;
+  --color-ink-950: #faf8f3;
   --color-ink-900: #ffffff;
   --color-ink-850: #ffffff;
   --color-ink-800: #f2f1ee;
@@ -221,13 +233,55 @@ body {
   box-shadow: 0 30px 80px rgb(0 0 0 / 0.5);
 }
 
-/* Small-caps label used above headings and on certificates. */
+/* Inset panel — a card *inside* a card. The design uses it for goal tiles,
+   journal rows and trade rows: one step darker than the card in dark mode,
+   one step lighter in light mode, always with a fainter hairline. */
+@utility surface-inset {
+  background: var(--color-ink-880);
+  border: 1px solid color-mix(in srgb, var(--color-rule) 85%, transparent);
+  border-radius: var(--radius-inset);
+}
+
+/* Gold-tinted callout. The design's `rgba(201,162,39,.07–.08)` on a
+   `rgba(201,162,39,.22–.3)` edge — the reflection panel, the calculator
+   result, the next-live-session block. */
+@utility tint-gold {
+  background: color-mix(in srgb, var(--color-gold-500) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-gold-500) 28%, transparent);
+}
+
+/* Ember-tinted callout, used only for the risk and custody disclosures. */
+@utility tint-ember {
+  background: color-mix(in srgb, var(--color-ember-500) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-ember-500) 25%, transparent);
+}
+
+/* Small-caps label used above headings and on certificates. The design tracks
+   these very wide — 0.22em to 0.34em depending on size. This is the mid
+   setting; `eyebrow-wide` is the hero variant. */
 @utility eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--color-gold-500);
+}
+
+@utility eyebrow-wide {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-gold-500);
+}
+
+/* Section label inside the sidebar — the one eyebrow that is not gold. */
+@utility nav-heading {
+  font-size: 0.53125rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-mist-100) 28%, transparent);
 }
 
 @utility font-display {

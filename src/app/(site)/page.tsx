@@ -106,10 +106,10 @@ export default async function HomePage() {
         </div>
 
         <dl className="mt-14 grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatTile label="Courses live" value={courses.length} icon="📚" />
-          <StatTile label="Lessons" value={lessonCount} icon="🎬" />
-          <StatTile label="Members" value={studentCount} icon="👥" />
-          <StatTile label="Certificates issued" value={certificateCount} icon="🎓" />
+          <StatTile label="Courses live" value={courses.length} />
+          <StatTile label="Lessons" value={lessonCount} />
+          <StatTile label="Members" value={studentCount} />
+          <StatTile label="Certificates issued" value={certificateCount} />
         </dl>
       </section>
 

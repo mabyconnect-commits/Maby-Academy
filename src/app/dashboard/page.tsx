@@ -2,166 +2,181 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session";
 import { getDashboardSummary } from "@/server/services/progress";
+import { getOnboardingProfile } from "@/server/services/onboarding";
+import { listRecentBadges } from "@/server/services/rewards";
 import {
-  Avatar,
   Card,
+  CardLink,
   EmptyState,
   LinkButton,
+  PanelHead,
   Pill,
   ProgressBar,
-  SectionHeading,
   StatTile,
-  StatusPill,
 } from "@/components/ui";
-import { formatDate } from "@/lib/utils";
+import { Icon } from "@/components/Icon";
+import { formatDate, pluralize } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = { title: "Overview" };
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const summary = await getDashboardSummary(user.id);
-  const { stats, resume, enrollments, gradedRecently, upcomingSessions } = summary;
+  const [summary, profile, badges] = await Promise.all([
+    getDashboardSummary(user.id),
+    getOnboardingProfile(user.id),
+    listRecentBadges(user.id, 3),
+  ]);
+  const { stats, resume, enrollments, gradedRecently, upcomingSessions, dueSoon } =
+    summary;
 
-  const firstName = user.name.split(" ")[0];
+  const nextSession = upcomingSessions[0];
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Welcome back, {firstName}.
-        </h1>
-        <p className="mt-1.5 text-sm text-mist-400">
-          {stats.activeCourses > 0
-            ? "Consistency beats intensity. Pick up where you left off."
-            : "Your seat is ready — enrol in your first course to begin."}
-        </p>
-      </header>
+    // The design's dashboard is a two-column grid that collapses to one — the
+    // right rail is context (what's next, what you earned, what's due), never
+    // required to make sense of the left.
+    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="flex flex-col gap-5">
+        {/* Onboarding prompt ------------------------------------------- */}
+        {!profile?.completedAt && (
+          <Card variant="gold" pad="wide">
+            <p className="eyebrow">Two minutes</p>
+            <h2 className="mt-2.5 text-[17px] leading-[1.25] font-extrabold text-mist-100 sm:text-[19px]">
+              Answer four questions and we&apos;ll build your path.
+            </h2>
+            <p className="mt-2.5 text-xs text-mist-400">
+              Where you&apos;re starting, what you&apos;re here for, which
+              pillars you want, and how much time you have.
+            </p>
+            <LinkButton href="/onboarding" className="mt-4" size="lg">
+              Set up my path
+            </LinkButton>
+          </Card>
+        )}
 
-      {/* Stats ---------------------------------------------------------- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatTile
-          label="Active courses"
-          value={stats.activeCourses}
-          icon="📚"
-          hint={`${stats.completedCourses} completed`}
-        />
-        <StatTile
-          label="Lessons done"
-          value={stats.completedLessons}
-          icon="✓"
-        />
-        <StatTile
-          label="Points"
-          value={user.pointsBalance.toLocaleString()}
-          icon="⚡"
-          hint={`${user.lifetimePoints.toLocaleString()} lifetime`}
-        />
-        <StatTile
-          label="Certificates"
-          value={stats.certificates}
-          icon="🎓"
-          hint={stats.pendingSubmissions > 0 ? `${stats.pendingSubmissions} in review` : undefined}
-        />
-      </div>
-
-      {/* Resume --------------------------------------------------------- */}
-      {resume && (
-        <Card variant="gold">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Resume ------------------------------------------------------ */}
+        {resume ? (
+          <Card
+            variant="gold"
+            pad="wide"
+            className="flex flex-wrap items-center justify-between gap-5"
+          >
             <div className="min-w-0">
-              <Pill tone="gold">Continue learning</Pill>
-              <h2 className="mt-3 font-semibold text-mist-100 truncate">
+              <p className="eyebrow">Continue learning</p>
+              <h2 className="mt-2.5 text-[17px] leading-[1.25] font-extrabold text-mist-100 sm:text-[22px]">
                 {resume.course.title}
               </h2>
-              <div className="mt-3 max-w-sm">
-                <ProgressBar value={resume.progressPercent} showLabel />
-              </div>
+              <p className="mt-2.5 text-xs font-medium text-mist-400">
+                {resume.progressPercent}% complete
+                {resume.nextLesson && ` · up next: ${resume.nextLesson.title}`}
+              </p>
             </div>
-            <LinkButton href={`/courses/${resume.course.slug}`} size="lg">
+            <LinkButton
+              href={
+                resume.nextLesson
+                  ? `/courses/${resume.course.slug}/lessons/${resume.nextLesson.slug}`
+                  : `/courses/${resume.course.slug}`
+              }
+              size="lg"
+              className="shrink-0"
+            >
+              <Icon name="play" size={12} strokeWidth={2.5} />
               {resume.progressPercent > 0 ? "Resume" : "Start"}
             </LinkButton>
-          </div>
-        </Card>
-      )}
-
-      {/* Courses -------------------------------------------------------- */}
-      <section>
-        <SectionHeading
-          title="My courses"
-          subtitle={`${enrollments.length} enrolment${enrollments.length === 1 ? "" : "s"}`}
-          action={
-            <Link
-              href="/dashboard/courses"
-              className="text-sm text-gold-400 hover:text-gold-300"
-            >
-              View all →
-            </Link>
-          }
-        />
-
-        {enrollments.length === 0 ? (
+          </Card>
+        ) : (
           <EmptyState
-            icon="📚"
-            title="No courses yet"
-            description="Browse the catalogue and enrol in something. Most people start with crypto foundations."
+            icon="book"
+            title="Nothing in progress"
+            description="Enrol in a course and it will appear here, ready to pick up where you left off."
             action={<LinkButton href="/courses">Browse courses</LinkButton>}
           />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {enrollments.slice(0, 4).map((e) => (
-              <Link
-                key={e.id}
-                href={`/courses/${e.course.slug}`}
-                className="surface p-4 hover:border-gold-600/50 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-xl" aria-hidden>
-                    {e.course.category.iconEmoji ?? "📘"}
-                  </span>
-                  <StatusPill status={e.status} />
-                </div>
-                <h3 className="mt-3 text-sm font-semibold text-mist-100 leading-snug">
-                  {e.course.title}
-                </h3>
-                <div className="mt-3">
-                  <ProgressBar value={e.progressPercent} showLabel />
-                </div>
-              </Link>
-            ))}
-          </div>
         )}
-      </section>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent grades ------------------------------------------------ */}
-        <section>
-          <SectionHeading title="Recent feedback" />
+        {/* Stats ------------------------------------------------------- */}
+        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+          <StatTile
+            label="Active courses"
+            value={stats.activeCourses}
+            hint={
+              stats.completedCourses > 0
+                ? `${stats.completedCourses} completed`
+                : undefined
+            }
+          />
+          <StatTile label="Lessons done" value={stats.completedLessons} />
+          <StatTile
+            label="Points"
+            value={user.pointsBalance.toLocaleString()}
+            tone="gold"
+          />
+          <StatTile
+            label="Certificates"
+            value={stats.certificates}
+            tone="growth"
+            hint={
+              stats.pendingSubmissions > 0
+                ? `${stats.pendingSubmissions} in review`
+                : undefined
+            }
+          />
+        </div>
+
+        {/* Track progress --------------------------------------------- */}
+        {enrollments.length > 0 && (
+          <Card pad="wide">
+            <PanelHead
+              title="Track progress"
+              action={<CardLink href="/dashboard/courses">View all →</CardLink>}
+            />
+            <div className="space-y-4">
+              {enrollments.slice(0, 4).map((e) => (
+                <Link key={e.id} href={`/courses/${e.course.slug}`} className="block">
+                  <div className="mb-[7px] flex items-center justify-between gap-3">
+                    <span className="truncate text-[12.5px] font-semibold text-mist-200">
+                      {e.course.title}
+                    </span>
+                    <span className="text-xs font-bold text-gold-500 tabular-nums">
+                      {e.progressPercent}%
+                    </span>
+                  </div>
+                  <ProgressBar value={e.progressPercent} />
+                </Link>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Recent feedback -------------------------------------------- */}
+        <Card pad="wide">
+          <PanelHead
+            title="Recent feedback"
+            action={<CardLink href="/dashboard/assignments">All work →</CardLink>}
+          />
           {gradedRecently.length === 0 ? (
-            <Card>
-              <p className="text-sm text-mist-400">
-                No graded work yet. Submit an assignment and your instructor
-                will read it.
-              </p>
-            </Card>
+            <p className="text-xs leading-[1.6] text-mist-400">
+              No graded work yet. Submit an assignment and a real instructor
+              reads it — that is what makes the certificate mean something.
+            </p>
           ) : (
             <div className="space-y-2.5">
               {gradedRecently.map((s) => (
                 <Link
                   key={s.id}
                   href={`/courses/${s.assignment.lesson.module.course.slug}/lessons/${s.assignment.lesson.slug}`}
-                  className="surface p-4 block hover:border-ink-500 transition-colors"
+                  className="surface-inset block p-3.5 transition-colors hover:border-gold-500/40"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm text-mist-200 truncate">
+                    <p className="truncate text-xs font-bold text-mist-100">
                       {s.assignment.title}
                     </p>
-                    <span className="text-sm font-semibold text-growth-400 tabular-nums shrink-0">
+                    <span className="shrink-0 text-xs font-bold text-growth-500 tabular-nums">
                       {s.score}/{s.assignment.maxScore}
                     </span>
                   </div>
                   {s.feedback && (
-                    <p className="mt-1.5 text-xs text-mist-400 line-clamp-2">
+                    <p className="mt-1.5 line-clamp-2 text-[10.5px] leading-[1.4] text-mist-400">
                       {s.feedback}
                     </p>
                   )}
@@ -169,52 +184,94 @@ export default async function DashboardPage() {
               ))}
             </div>
           )}
-        </section>
+        </Card>
+      </div>
 
-        {/* Upcoming live ------------------------------------------------ */}
-        <section>
-          <SectionHeading
-            title="Upcoming live sessions"
-            action={
-              <Link
-                href="/dashboard/live"
-                className="text-sm text-gold-400 hover:text-gold-300"
-              >
-                All →
-              </Link>
-            }
+      {/* --------------------------------------------------------------- */}
+      {/* Right rail                                                       */}
+      {/* --------------------------------------------------------------- */}
+      <div className="flex flex-col gap-5">
+        <Card>
+          <PanelHead
+            title="Next live session"
+            action={<CardLink href="/dashboard/live">All →</CardLink>}
           />
-          {upcomingSessions.length === 0 ? (
-            <Card>
-              <p className="text-sm text-mist-400">
-                Nothing scheduled right now. New sessions appear here as
-                they&apos;re announced.
+          {nextSession ? (
+            <div className="tint-gold rounded-[10px] p-4">
+              <p className="text-[13px] leading-[1.4] font-bold text-mist-100">
+                {nextSession.title}
               </p>
-            </Card>
+              <p className="mt-[7px] text-[11px] leading-[1.5] font-medium text-mist-400">
+                {formatDate(nextSession.startsAt, true)} · with{" "}
+                {nextSession.host.name}
+              </p>
+              <LinkButton
+                href="/dashboard/live"
+                size="sm"
+                className="mt-3"
+              >
+                {nextSession.rsvps.length > 0 ? "You're going" : "Reserve a seat"}
+              </LinkButton>
+            </div>
           ) : (
-            <div className="space-y-2.5">
-              {upcomingSessions.map((s) => (
-                <Card key={s.id}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-mist-100 truncate">
-                        {s.title}
-                      </p>
-                      <p className="mt-1 text-xs text-mist-400">
-                        {formatDate(s.startsAt, true)}
-                      </p>
-                    </div>
-                    {s.rsvps.length > 0 && <Pill tone="growth">Going</Pill>}
-                  </div>
-                  <div className="mt-3 flex items-center gap-2 text-xs text-mist-400">
-                    <Avatar name={s.host.name} src={s.host.avatarUrl} size={20} />
-                    {s.host.name}
-                  </div>
-                </Card>
+            <p className="text-xs leading-[1.6] text-mist-400">
+              Nothing scheduled right now. New sessions appear here as they are
+              announced, in your own time zone.
+            </p>
+          )}
+        </Card>
+
+        <Card>
+          <PanelHead
+            title="Recent badges"
+            action={<CardLink href="/dashboard/rewards">Rewards →</CardLink>}
+          />
+          {badges.length === 0 ? (
+            <p className="text-xs leading-[1.6] text-mist-400">
+              No badges yet. They arrive for finishing things, not for signing
+              up.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {badges.map((b) => (
+                <div key={b.id} className="flex items-center gap-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full border border-gold-500/35 bg-gold-500/12 text-gold-500">
+                    <Icon name="award" size={16} strokeWidth={2} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-bold text-mist-100">
+                      {b.badge.name}
+                    </span>
+                    <span className="mt-[3px] block text-[10.5px] leading-[1.3] text-mist-400">
+                      {b.badge.description}
+                    </span>
+                  </span>
+                </div>
               ))}
             </div>
           )}
-        </section>
+        </Card>
+
+        {dueSoon && (
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[13px] font-bold text-mist-100">
+                Assignment due
+              </span>
+              <Pill tone={dueSoon.daysLeft <= 2 ? "flag" : "gold"}>
+                {dueSoon.daysLeft <= 0
+                  ? "TODAY"
+                  : `${pluralize(dueSoon.daysLeft, "DAY")}`}
+              </Pill>
+            </div>
+            <p className="mt-3 text-[12.5px] leading-[1.4] font-semibold text-mist-200">
+              {dueSoon.title}
+            </p>
+            <div className="mt-2.5">
+              <CardLink href={dueSoon.href}>Open assignment →</CardLink>
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );

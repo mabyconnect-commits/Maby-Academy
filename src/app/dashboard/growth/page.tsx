@@ -58,19 +58,16 @@ export default async function GrowthPage() {
         <StatTile
           label="Today"
           value={`${today.done}/${today.total}`}
-          icon="✓"
           hint={today.total > 0 ? `${percentToday}% done` : "no habits yet"}
         />
-        <StatTile label="Best streak" value={`${activeStreak}d`} icon="🔥" />
+        <StatTile label="Best streak" value={`${activeStreak}d`} />
         <StatTile
           label="Active goals"
           value={goals.length}
-          icon="🎯"
         />
         <StatTile
           label="Journal entries"
           value={journalCount}
-          icon="📓"
           hint={`${daysWithActivity}/28 active days`}
         />
       </div>
@@ -94,7 +91,7 @@ export default async function GrowthPage() {
 
         {habits.length === 0 ? (
           <EmptyState
-            icon="🌱"
+            icon="seedling"
             title="No habits yet"
             description="Start with two or three. A checklist you can actually finish is worth more than one that shames you every morning."
           />
@@ -182,7 +179,7 @@ export default async function GrowthPage() {
 
         {goals.length === 0 ? (
           <EmptyState
-            icon="🎯"
+            icon="target"
             title="No goals set"
             description="Write down what you're actually building toward. Concrete beats aspirational — a number and a date you can be held to."
           />

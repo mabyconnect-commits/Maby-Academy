@@ -25,7 +25,7 @@ export default async function CertificatesPage() {
 
       {certificates.length === 0 ? (
         <EmptyState
-          icon="🎓"
+          icon="award"
           title="No certificates yet"
           description="Complete a course past its pass threshold and your certificate is issued automatically."
           action={<LinkButton href="/dashboard/courses">See my courses</LinkButton>}

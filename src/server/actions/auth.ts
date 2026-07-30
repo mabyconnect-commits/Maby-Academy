@@ -29,27 +29,7 @@ import {
 } from "@/server/services/auth";
 import { audit } from "@/server/services/notifications";
 import { enforceRateLimit } from "@/server/services/rateLimit";
-import type { FormState } from "./formState";
-
-function toFormState(error: unknown): FormState {
-  if (error instanceof ZodError) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of error.issues) {
-      const key = issue.path.join(".") || "form";
-      fieldErrors[key] ??= issue.message;
-    }
-    return { ok: false, message: error.issues[0]?.message, fieldErrors };
-  }
-  if (error instanceof ServiceError) {
-    return {
-      ok: false,
-      message: error.message,
-      fieldErrors: error.field ? { [error.field]: error.message } : undefined,
-    };
-  }
-  console.error("[action] unhandled error:", error);
-  return { ok: false, message: "Something went wrong. Please try again." };
-}
+import { toFormState, type FormState } from "./formState";
 
 async function requestMeta() {
   const h = await headers();
@@ -87,7 +67,9 @@ export async function registerAction(
     return toFormState(error);
   }
 
-  redirect("/dashboard");
+  // A new member goes to the questionnaire, not the dashboard: an empty
+  // dashboard is a dead end, and the path built here is what fills it.
+  redirect("/onboarding");
 }
 
 export async function loginAction(

@@ -259,3 +259,60 @@ export async function approveClearCommissions(actor: Actor) {
 
   return { approved, skipped: queue.length - approved };
 }
+
+/**
+ * A member's own payment history, for the billing page.
+ *
+ * Scoped to the caller's own rows — this is the member-facing counterpart to
+ * the finance queues above, which require `payment:view`. Keeping them in one
+ * module but with different scoping rules is deliberate: the difference is
+ * visible side by side rather than buried in two files.
+ */
+export async function listBillingHistory(userId: string) {
+  const [orders, invoices] = await Promise.all([
+    db.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        amountMinor: true,
+        currency: true,
+        status: true,
+        providerRef: true,
+        createdAt: true,
+        paidAt: true,
+        course: { select: { title: true, slug: true } },
+      },
+    }),
+    db.invoice.findMany({
+      where: { userId },
+      orderBy: { issuedAt: "desc" },
+      select: {
+        id: true,
+        number: true,
+        totalMinor: true,
+        currency: true,
+        status: true,
+        issuedAt: true,
+        paidAt: true,
+      },
+    }),
+  ]);
+
+  /**
+   * Only PAID orders count toward the total. Summing every row would tell a
+   * member they had spent money on abandoned checkouts they were never charged
+   * for — the single most alarming thing a billing page can get wrong.
+   */
+  const paid = orders.filter((o) => o.status === "PAID");
+  const totalSpentMinor = paid.reduce((sum, o) => sum + o.amountMinor, 0);
+
+  return {
+    orders,
+    invoices,
+    totalSpentMinor,
+    // Mixed-currency history has no single meaningful total; show the currency
+    // actually used rather than assuming USD.
+    currency: paid[0]?.currency ?? orders[0]?.currency ?? "USD",
+  };
+}

@@ -2,8 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getCurrentUser } from "@/lib/auth/session";
 import { fulfilOrder, getOrderByReference } from "@/server/services/checkout";
-import { Card, LinkButton, Pill } from "@/components/ui";
-import { formatMoney } from "@/lib/utils";
+import { Card, LinkButton } from "@/components/ui";
+import { Icon, type IconName } from "@/components/Icon";
+import { cn, formatMoney } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Payment",
@@ -30,7 +31,7 @@ export default async function CheckoutReturnPage({
 
   if (!reference) {
     return (
-      <Shell icon="?" tone="neutral" title="No payment reference">
+      <Shell icon="help" tone="neutral" title="No payment reference">
         <p className="text-mist-300">
           We couldn&apos;t tell which payment this was. If money left your
           account, it is safe — open a support ticket and we&apos;ll sort it
@@ -46,7 +47,7 @@ export default async function CheckoutReturnPage({
 
   if (result.ok) {
     return (
-      <Shell icon="✓" tone="growth" title="Payment confirmed">
+      <Shell icon="check" tone="growth" title="Payment confirmed">
         <p className="text-mist-300">
           You&apos;re enrolled
           {order?.course ? ` in ${order.course.title}` : ""}. Your seat is
@@ -74,7 +75,7 @@ export default async function CheckoutReturnPage({
 
   if (result.reason === "pending") {
     return (
-      <Shell icon="⏳" tone="gold" title="Payment is still processing">
+      <Shell icon="calendar" tone="gold" title="Payment is still processing">
         <p className="text-mist-300">
           Your bank hasn&apos;t confirmed this yet. Some methods take a few
           minutes. You don&apos;t need to pay again — we&apos;ll enrol you and
@@ -90,7 +91,7 @@ export default async function CheckoutReturnPage({
 
   if (result.reason === "amount_mismatch") {
     return (
-      <Shell icon="⚠" tone="flag" title="Payment amount didn't match">
+      <Shell icon="flag" tone="flag" title="Payment amount didn't match">
         <p className="text-mist-300">
           The amount received doesn&apos;t match the price of this course, so we
           haven&apos;t enrolled you. Nothing further has been taken. Open a
@@ -105,7 +106,7 @@ export default async function CheckoutReturnPage({
   }
 
   return (
-    <Shell icon="✕" tone="flag" title="Payment not completed">
+    <Shell icon="flag" tone="flag" title="Payment not completed">
       <p className="text-mist-300">
         This payment didn&apos;t go through, so you haven&apos;t been charged
         for a course you can&apos;t access. You can try again whenever
@@ -125,24 +126,38 @@ export default async function CheckoutReturnPage({
   );
 }
 
+const SHELL_TONES = {
+  growth: "border-growth-500/35 bg-growth-500/10 text-growth-500",
+  gold: "border-gold-500/35 bg-gold-500/10 text-gold-500",
+  flag: "border-flag-500/35 bg-flag-500/10 text-flag-500",
+  neutral: "border-rule-strong bg-ink-800 text-mist-300",
+} as const;
+
 function Shell({
   icon,
   tone,
   title,
   children,
 }: {
-  icon: string;
-  tone: "growth" | "gold" | "flag" | "neutral";
+  icon: IconName;
+  tone: keyof typeof SHELL_TONES;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="mx-auto max-w-xl px-4 py-20 text-center">
-      <div className="text-5xl mb-4" aria-hidden>
-        {icon}
+      {/* A ruled medallion rather than an emoji — the same figure the design
+          uses for badges, so a payment outcome looks like part of the product
+          and not like a chat message. */}
+      <div
+        className={cn(
+          "mx-auto mb-5 grid size-14 place-items-center rounded-full border",
+          SHELL_TONES[tone],
+        )}
+      >
+        <Icon name={icon} size={24} strokeWidth={2} />
       </div>
-      <Pill tone={tone}>{title}</Pill>
-      <h1 className="mt-5 text-3xl font-semibold tracking-tight">{title}</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
       <Card className="mt-6 text-left sm:text-center">{children}</Card>
     </div>
   );

@@ -47,7 +47,7 @@ export default async function LiveSessionsPage() {
 
         {upcoming.length === 0 ? (
           <EmptyState
-            icon="📅"
+            icon="calendar"
             title="Nothing scheduled yet"
             description="New sessions are announced here and in your notifications. Keep an eye out."
           />

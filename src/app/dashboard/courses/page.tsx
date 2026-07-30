@@ -34,7 +34,7 @@ export default async function MyCoursesPage() {
 
       {enrollments.length === 0 ? (
         <EmptyState
-          icon="📚"
+          icon="book"
           title="You haven't enrolled yet"
           description="Pick a pillar that matters to you right now and start there. You can always add more later."
           action={<LinkButton href="/courses">Browse the catalogue</LinkButton>}

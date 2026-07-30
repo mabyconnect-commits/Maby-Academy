@@ -51,7 +51,7 @@ export default async function NotificationsPage() {
 
       {notifications.length === 0 ? (
         <EmptyState
-          icon="🔔"
+          icon="bell"
           title="Nothing here yet"
           description="Grades, certificates, live sessions and referral activity all land here."
         />

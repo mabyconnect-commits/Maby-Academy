@@ -56,25 +56,21 @@ export default async function FinancePage() {
             <StatTile
               label="Net revenue"
               value={formatMoney(overview.netMinor)}
-              icon="💰"
               hint={`${formatMoney(overview.grossMinor)} gross`}
             />
             <StatTile
               label="Refunded"
               value={formatMoney(overview.refundedMinor)}
-              icon="↩"
               hint={`${overview.refundCount} orders`}
             />
             <StatTile
               label="Commission liability"
               value={formatMoney(overview.liabilityMinor)}
-              icon="⚖"
               hint="owed, not yet paid"
             />
             <StatTile
               label="Paid out"
               value={formatMoney(overview.commissions.paid.amountMinor)}
-              icon="✓"
               hint={`${overview.commissions.paid.count} commissions`}
             />
           </div>
@@ -105,7 +101,7 @@ export default async function FinancePage() {
 
         {pending.length === 0 ? (
           <EmptyState
-            icon="✅"
+            icon="check"
             title="Nothing pending"
             description="Every commission has been reviewed."
           />
