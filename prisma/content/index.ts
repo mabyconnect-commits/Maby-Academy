@@ -4,6 +4,7 @@ import { moneyThatLasts } from "./money-that-lasts";
 import { strongFoundations } from "./strong-foundations";
 import { characterAndCalling } from "./character-and-calling";
 import { riskFirstTrading } from "./risk-first-trading";
+import { readingTheChain } from "./reading-the-chain";
 
 /**
  * The authored curriculum.
@@ -19,6 +20,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   strongFoundations,
   characterAndCalling,
   riskFirstTrading,
+  readingTheChain,
 ];
 
 export { loadCourse, loadCourses } from "./load";
