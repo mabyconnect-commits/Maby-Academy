@@ -72,7 +72,9 @@ export function Logo({
       {showWordmark && (
         <span
           className={cn(
-            "font-semibold tracking-[0.14em] uppercase text-mist-100 leading-none",
+            // nowrap: at 390px the wordmark otherwise breaks after "Maby",
+            // stacking the brand over two lines inside a 64px-tall header.
+            "leading-none font-semibold tracking-[0.14em] whitespace-nowrap uppercase text-mist-100",
             text,
           )}
         >

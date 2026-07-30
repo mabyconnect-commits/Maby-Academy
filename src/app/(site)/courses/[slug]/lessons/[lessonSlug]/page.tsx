@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getLessonForViewer } from "@/server/services/courses";
 import { getQuizAttempts } from "@/server/services/assessment";
 import { Alert, Card, LinkButton, Pill, ProgressBar } from "@/components/ui";
-import { formatDuration } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 import { CompleteLessonForm } from "./CompleteLessonForm";
 import { QuizForm } from "./QuizForm";
 import { AssignmentForm } from "./AssignmentForm";
@@ -61,8 +61,11 @@ export default async function LessonPage({
   const path = `/courses/${slug}/lessons/${lessonSlug}`;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <div className="grid lg:grid-cols-[1fr_320px] gap-8 items-start">
+    // max-w-6xl, not 7xl: the header and footer are 6xl, and a wider body
+    // makes the lesson start 64px left of the logo, which reads as a broken
+    // layout rather than a deliberately wide reading column.
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="grid items-start gap-8 lg:grid-cols-[1fr_310px]">
         {/* ------------------------------------------------------------- */}
         {/* Lesson body                                                    */}
         {/* ------------------------------------------------------------- */}
@@ -74,31 +77,36 @@ export default async function LessonPage({
           </nav>
 
           <div className="flex flex-wrap items-center gap-2">
+            <p className="eyebrow">
+              Lesson {data.position.index} of {data.position.total}
+            </p>
+            <span className="text-ink-600" aria-hidden>
+              |
+            </span>
             <Pill tone="neutral">
               {LESSON_ICONS[lesson.type]} {lesson.type.toLowerCase()}
             </Pill>
-            <span className="text-xs text-mist-400">
-              Lesson {data.position.index} of {data.position.total}
-            </span>
             {progress?.isCompleted && <Pill tone="growth">✓ Complete</Pill>}
             {lesson.isPreview && !enrollment && (
               <Pill tone="gold">Free preview</Pill>
             )}
           </div>
 
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight">
+          <h1 className="mt-3.5 text-3xl leading-tight font-semibold tracking-tight text-mist-100">
             {lesson.title}
           </h1>
 
           {/* Video ---------------------------------------------------- */}
           {lesson.videoUrl && (
-            <div className="mt-6 rounded-xl overflow-hidden border border-ink-700 bg-black aspect-video">
+            // Always black behind the frame, never a themed surface: a video
+            // letterboxing against a white card looks like a broken embed.
+            <div className="mt-6 aspect-video overflow-hidden rounded-[var(--radius-card)] border border-rule-strong bg-black">
               <iframe
                 src={lesson.videoUrl}
                 title={lesson.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="w-full h-full"
+                className="h-full w-full"
               />
             </div>
           )}
@@ -139,9 +147,7 @@ export default async function LessonPage({
           {/* Resources ------------------------------------------------- */}
           {lesson.resources.length > 0 && (
             <Card className="mt-8">
-              <h2 className="text-sm font-semibold text-mist-100">
-                Resources for this lesson
-              </h2>
+              <p className="eyebrow">Resources</p>
               <ul className="mt-3 space-y-2">
                 {lesson.resources.map((r) => (
                   <li key={r.id}>
@@ -185,7 +191,7 @@ export default async function LessonPage({
 
           {/* Completion + navigation ----------------------------------- */}
           {enrollment && (
-            <div className="mt-10 pt-6 border-t border-ink-700">
+            <div className="mt-10 border-t border-rule pt-6">
               <CompleteLessonForm
                 lessonId={lesson.id}
                 path={path}
@@ -199,14 +205,21 @@ export default async function LessonPage({
             </div>
           )}
 
-          <nav className="mt-8 flex justify-between gap-4" aria-label="Lesson navigation">
+          <nav
+            className="mt-8 flex justify-between gap-3"
+            aria-label="Lesson navigation"
+          >
             {data.prev ? (
               <LinkButton
                 href={`/courses/${course.slug}/lessons/${data.prev.slug}`}
                 variant="secondary"
                 size="sm"
+                className="min-w-0 max-w-[48%]"
               >
-                ← {data.prev.title}
+                <span aria-hidden>←</span>
+                {/* Lesson titles run long; unclamped they blow the button out
+                    to the full column width on a phone. */}
+                <span className="truncate">{data.prev.title}</span>
               </LinkButton>
             ) : (
               <span />
@@ -216,8 +229,10 @@ export default async function LessonPage({
                 href={`/courses/${course.slug}/lessons/${data.next.slug}`}
                 variant="secondary"
                 size="sm"
+                className="ml-auto min-w-0 max-w-[48%]"
               >
-                {data.next.title} →
+                <span className="truncate">{data.next.title}</span>
+                <span aria-hidden>→</span>
               </LinkButton>
             ) : (
               <span />
@@ -229,9 +244,10 @@ export default async function LessonPage({
         {/* Course outline                                                 */}
         {/* ------------------------------------------------------------- */}
         <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
-          <Card className="p-0 overflow-hidden">
-            <div className="px-4 py-3.5 border-b border-ink-700 bg-ink-800/50">
-              <p className="text-sm font-semibold text-mist-100">
+          <Card className="overflow-hidden p-0">
+            <div className="border-b border-rule bg-ink-800/50 px-4 py-3.5">
+              <p className="eyebrow">Course outline</p>
+              <p className="mt-1.5 text-sm font-semibold text-mist-100">
                 {course.title}
               </p>
               {enrollment && (
@@ -241,10 +257,10 @@ export default async function LessonPage({
               )}
             </div>
 
-            <div className="divide-y divide-ink-800">
+            <div className="divide-y divide-rule">
               {course.modules.map((module) => (
                 <div key={module.id} className="py-2">
-                  <p className="px-4 py-1.5 text-xs uppercase tracking-wide text-mist-400 font-semibold">
+                  <p className="px-4 py-1.5 text-[11px] font-bold tracking-[0.12em] text-mist-400 uppercase">
                     {module.title}
                   </p>
                   <ul>
@@ -255,7 +271,13 @@ export default async function LessonPage({
 
                       const body = (
                         <>
-                          <span className="w-4 shrink-0 text-xs" aria-hidden>
+                          <span
+                            className={cn(
+                              "w-4 shrink-0 text-xs",
+                              done && !isCurrent && "text-growth-500",
+                            )}
+                            aria-hidden
+                          >
                             {done ? "✓" : (LESSON_ICONS[l.type] ?? "•")}
                           </span>
                           <span className="flex-1 line-clamp-2">{l.title}</span>
@@ -267,14 +289,18 @@ export default async function LessonPage({
                         </>
                       );
 
-                      const classes = [
-                        "flex items-start gap-2 px-4 py-2 text-sm transition-colors",
+                      const classes = cn(
+                        "flex items-start gap-2 py-2 pr-4 text-sm transition-colors",
+                        // A left border on the current row only would shift
+                        // every other row by 2px; a transparent one on the
+                        // rest keeps the text edge aligned down the list.
+                        "border-l-2 pl-3.5",
                         isCurrent
-                          ? "bg-gold-500/10 text-gold-300 border-l-2 border-gold-500"
+                          ? "border-gold-500 bg-gold-500/10 font-medium text-gold-300"
                           : done
-                            ? "text-mist-400 hover:bg-ink-800/60"
-                            : "text-mist-200 hover:bg-ink-800/60",
-                      ].join(" ");
+                            ? "border-transparent text-mist-400 hover:bg-gold-500/8"
+                            : "border-transparent text-mist-200 hover:bg-gold-500/8",
+                      );
 
                       return (
                         <li key={l.id}>
@@ -287,7 +313,7 @@ export default async function LessonPage({
                               {body}
                             </Link>
                           ) : (
-                            <div className={`${classes} opacity-60`}>{body}</div>
+                            <div className={cn(classes, "opacity-60")}>{body}</div>
                           )}
                         </li>
                       );

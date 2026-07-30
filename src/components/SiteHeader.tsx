@@ -48,7 +48,14 @@ export async function SiteHeader() {
                 Sign in
               </LinkButton>
               <LinkButton href="/register" size="sm">
-                Join the academy
+                {/* One span, not a bare text node plus a span: the button is a
+                    flex row with a gap, so two children render as
+                    "Join  the academy" with a double space.
+                    Abbreviated on phones — with the wordmark held on one line,
+                    the full label pushes the header past 390px. */}
+                <span>
+                  Join<span className="hidden sm:inline"> the academy</span>
+                </span>
               </LinkButton>
             </>
           )}

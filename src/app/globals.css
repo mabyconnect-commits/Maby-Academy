@@ -46,6 +46,13 @@
   /* Info — the one cool accent, for neutral system states. */
   --color-info-500: #5b8def;
 
+  /* Hairlines. A single token for every card edge, divider and rule, exposed
+     as a colour so `border-rule` / `divide-rule` work in components.
+     It has to be a token rather than a literal `white/7`: on a white card in
+     light mode a white hairline is invisible, and every card loses its edge. */
+  --color-rule: rgb(255 255 255 / 0.07);
+  --color-rule-strong: rgb(255 255 255 / 0.13);
+
   /* Archivo carries the whole interface; Cormorant appears only where the
      academy wants to feel institutional — certificates and award moments. */
   --font-sans: var(--font-archivo), system-ui, -apple-system, "Segoe UI",
@@ -106,6 +113,10 @@
     --color-ember-500: #a8501a;
     --color-ember-400: #8a4114;
 
+    /* Dark hairlines, so cards keep a visible edge on a white background. */
+    --color-rule: rgb(11 11 13 / 0.10);
+    --color-rule-strong: rgb(11 11 13 / 0.18);
+
     --page-glow-gold: rgba(201, 162, 39, 0.14);
     --page-glow-growth: rgba(76, 175, 125, 0.08);
   }
@@ -142,6 +153,9 @@
 
   --color-ember-500: #a8501a;
   --color-ember-400: #8a4114;
+
+  --color-rule: rgb(11 11 13 / 0.1);
+  --color-rule-strong: rgb(11 11 13 / 0.18);
 }
 
 body {
@@ -176,7 +190,7 @@ body {
     var(--color-ink-850),
     var(--color-ink-900)
   );
-  border: 1px solid rgb(255 255 255 / 0.07);
+  border: 1px solid var(--color-rule);
   border-radius: var(--radius-card);
 }
 

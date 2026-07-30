@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { listCategories, listPublishedCourses } from "@/server/services/courses";
 import { CourseCard } from "@/components/CourseCard";
-import { EmptyState, LinkButton, Pill } from "@/components/ui";
+import { Button, EmptyState, Input, LinkButton } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -45,36 +45,33 @@ export default async function CoursesPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-14">
       <header>
-        <Pill tone="gold">The curriculum</Pill>
-        <h1 className="mt-5 text-4xl font-semibold tracking-tight">
+        <p className="eyebrow">The curriculum</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-mist-100 sm:text-5xl">
           {activeCategory ? activeCategory.name : "Every course in the academy"}
         </h1>
-        <p className="mt-3 text-mist-300 max-w-2xl leading-relaxed">
+        <p className="mt-4 max-w-2xl leading-relaxed text-mist-300">
           {activeCategory?.description ??
             "Start free, go deep. Every course carries assignments that a real instructor reads and grades, and ends in a verifiable certificate."}
         </p>
       </header>
 
       {/* Search ---------------------------------------------------------- */}
-      <form action="/courses" className="mt-8 flex gap-2 max-w-md">
+      <form action="/courses" className="mt-8 flex max-w-md gap-2">
         {params.category && (
           <input type="hidden" name="category" value={params.category} />
         )}
         {params.level && <input type="hidden" name="level" value={params.level} />}
-        <input
+        <Input
           type="search"
           name="q"
           defaultValue={params.q ?? ""}
           placeholder="Search courses…"
           aria-label="Search courses"
-          className="flex-1 rounded-lg bg-ink-900 border border-ink-600 px-3.5 py-2.5 text-sm text-mist-100 placeholder:text-mist-400/60 focus:border-gold-500"
+          className="flex-1"
         />
-        <button
-          type="submit"
-          className="rounded-lg bg-ink-800 border border-ink-600 px-4 text-sm text-mist-200 hover:bg-ink-700"
-        >
+        <Button type="submit" variant="secondary">
           Search
-        </button>
+        </Button>
       </form>
 
       {/* Filters --------------------------------------------------------- */}
@@ -88,9 +85,20 @@ export default async function CoursesPage({
               key={cat.id}
               href={hrefWith({ category: cat.slug })}
               active={params.category === cat.slug}
+              // A pillar with nothing published yet stays visible — it tells
+              // people the academy is going there — but dimmed, so the chip
+              // doesn't promise courses that aren't behind it.
+              muted={cat._count.courses === 0}
             >
               {cat.iconEmoji} {cat.name}
-              <span className="ml-1 text-mist-400">{cat._count.courses}</span>
+              <span
+                className={cn(
+                  "ml-1.5 tabular-nums",
+                  params.category === cat.slug ? "text-ink-950/60" : "text-mist-400",
+                )}
+              >
+                {cat._count.courses}
+              </span>
             </FilterChip>
           ))}
         </nav>
@@ -112,8 +120,11 @@ export default async function CoursesPage({
       </div>
 
       {/* Results --------------------------------------------------------- */}
-      <p className="mt-8 text-sm text-mist-400">
-        {courses.length} {courses.length === 1 ? "course" : "courses"}
+      <p className="mt-8 border-t border-rule pt-5 text-sm text-mist-400">
+        <span className="font-semibold text-mist-200 tabular-nums">
+          {courses.length}
+        </span>{" "}
+        {courses.length === 1 ? "course" : "courses"}
         {params.q && ` matching “${params.q}”`}
       </p>
 
@@ -144,10 +155,12 @@ export default async function CoursesPage({
 function FilterChip({
   href,
   active,
+  muted = false,
   children,
 }: {
   href: string;
   active: boolean;
+  muted?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -155,10 +168,11 @@ function FilterChip({
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+        "inline-flex items-center rounded-full border px-3.5 py-1.5 text-sm whitespace-nowrap transition-colors",
         active
-          ? "bg-gold-500 border-gold-500 text-ink-950 font-medium"
-          : "bg-ink-850 border-ink-600 text-mist-300 hover:border-ink-500 hover:text-mist-100",
+          ? "border-gold-500 bg-gold-500 font-semibold text-ink-950"
+          : "border-ink-600 bg-ink-850 text-mist-300 hover:border-gold-600/60 hover:text-gold-300",
+        !active && muted && "opacity-55",
       )}
     >
       {children}

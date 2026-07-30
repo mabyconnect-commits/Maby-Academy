@@ -102,10 +102,14 @@ export function StreakPill({ days }: { days: number }) {
 export function XpPill({ points, level }: { points: number; level?: number }) {
   return (
     <Pill tone="gold" className="whitespace-nowrap">
-      {points.toLocaleString()} XP
-      {level !== undefined && (
-        <span className="hidden sm:inline"> · LVL {level}</span>
-      )}
+      {/* Wrapped in one span so Pill's flex gap doesn't land between the XP
+          total and the level, on top of the separator's own spaces. */}
+      <span>
+        {points.toLocaleString()} XP
+        {level !== undefined && (
+          <span className="hidden sm:inline"> · LVL {level}</span>
+        )}
+      </span>
     </Pill>
   );
 }
@@ -160,7 +164,9 @@ export function EmptyState({
 type Tone = "neutral" | "gold" | "growth" | "flag" | "ember" | "info";
 
 const TONES: Record<Tone, string> = {
-  neutral: "bg-white/5 text-mist-300 border-white/8",
+  // Uses tokens rather than white/α: a white-on-white chip disappears in
+  // light mode, leaving bare text where a pill should be.
+  neutral: "bg-ink-800 text-mist-300 border-rule",
   gold: "bg-gold-500/12 text-gold-500 border-transparent",
   growth: "bg-growth-500/12 text-growth-500 border-transparent",
   flag: "bg-flag-500/12 text-flag-500 border-transparent",
