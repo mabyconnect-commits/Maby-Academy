@@ -381,6 +381,13 @@ export const NAV: Record<Workspace, NavSection[]> = {
           icon: "award",
           requires: "certificate:issue_manual",
         },
+        {
+          href: "/admin/seasons",
+          label: "Seasons & prizes",
+          short: "Seasons",
+          icon: "trophy",
+          requires: "settings:manage",
+        },
       ],
     },
     {

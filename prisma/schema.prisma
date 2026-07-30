@@ -128,6 +128,10 @@ model User {
   certificates      Certificate[]
   reviews           CourseReview[]
 
+  seasonResults    SeasonResult[] @relation("SeasonResults")
+  reviewedSeasons  SeasonResult[] @relation("SeasonResultReviewer")
+  lockedSeasons    Season[]       @relation("SeasonLockedBy")
+
   taughtCourses  Course[]          @relation("CourseInstructor")
   hostedSessions LiveSession[]     @relation("LiveSessionHost")
   rsvps          LiveSessionRsvp[]
@@ -1714,4 +1718,135 @@ model RateLimit {
   @@unique([key, windowStart])
   @@index([expiresAt])
   @@map("rate_limits")
+}
+
+// ===========================================================================
+// Seasons — the weekly leaderboard competition and its cash prizes
+// ===========================================================================
+
+enum SeasonStatus {
+  /// Being set up. Not visible to members, prizes still editable.
+  DRAFT
+  /// Running. The board is live and recomputed on read.
+  OPEN
+  /// Window closed and standings frozen into SeasonResult rows. Later
+  /// activity can no longer change a settled result.
+  LOCKED
+  /// Every result reviewed and either approved, withheld, or paid.
+  SETTLED
+  CANCELLED
+}
+
+enum SeasonResultStatus {
+  /// Frozen but not yet looked at by a human. Nothing pays from this state.
+  PENDING_REVIEW
+  /// A human has checked it and cleared it for payment.
+  APPROVED
+  /// Excluded from payment, with a reason on the record.
+  WITHHELD
+  PAID
+}
+
+/// A competition window with a prize pool.
+///
+/// Deliberately separate from `User.lifetimePoints`: that figure is a career
+/// total and cannot be the basis for a recurring prize, because the same
+/// people would win every week. A season scores only what was earned inside
+/// its own window.
+model Season {
+  id     String @id @default(cuid())
+  name   String
+  slug   String @unique
+  /// Shown to members on the board — what the season is for.
+  blurb  String?
+  status SeasonStatus @default(DRAFT)
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  /// Total pool in minor units, for display. The authoritative per-rank
+  /// amounts live on SeasonPrize.
+  prizePoolMinor Int    @default(0)
+  currency       String @default("NGN")
+
+  /// Anti-farming floors, per season so they can be tuned without a deploy.
+  /// Points must be spread across at least this many distinct days, which
+  /// makes a single long night worth nothing.
+  minActiveDays       Int @default(3)
+  /// A floor that keeps trivial participation off a paid board.
+  minQualifyingPoints Int @default(100)
+
+  lockedAt   DateTime?
+  lockedById String?
+  lockedBy   User?     @relation("SeasonLockedBy", fields: [lockedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  prizes  SeasonPrize[]
+  results SeasonResult[]
+
+  @@index([status, startsAt])
+  @@map("seasons")
+}
+
+/// A prize band, e.g. ranks 1–1 win X, ranks 2–3 win Y.
+///
+/// Bands rather than one row per rank so a "top ten each get 5,000" prize is
+/// a single row that cannot drift out of step with itself.
+model SeasonPrize {
+  id       String @id @default(cuid())
+  seasonId String
+  season   Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  rankFrom    Int
+  rankTo      Int
+  amountMinor Int
+  label       String?
+
+  @@unique([seasonId, rankFrom])
+  @@index([seasonId])
+  @@map("season_prizes")
+}
+
+/// A frozen standing. Written once when a season locks, then reviewed.
+///
+/// Snapshotting matters: a live query would let a member who kept working
+/// after the window closed appear to overtake a winner, and would make the
+/// board disagree with itself between two page loads.
+model SeasonResult {
+  id       String @id @default(cuid())
+  seasonId String
+  season   Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation("SeasonResults", fields: [userId], references: [id], onDelete: Cascade)
+
+  rank            Int
+  /// Points from verified work only — see QUALIFYING_REASONS in the service.
+  qualifyingPoints Int
+  activeDays       Int
+  /// Denormalised from the prize band at lock time, so editing a band later
+  /// cannot silently change what someone was told they had won.
+  prizeMinor       Int    @default(0)
+  currency         String @default("NGN")
+
+  status         SeasonResultStatus @default(PENDING_REVIEW)
+  withheldReason String?
+  /// Set by the anti-fraud pass at lock time; a human still decides.
+  flags          String[]           @default([])
+
+  reviewedById String?
+  reviewedBy   User?     @relation("SeasonResultReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+
+  paidAt    DateTime?
+  /// Free-text reference for the transfer, so a payment can be traced back.
+  payoutRef String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([seasonId, userId])
+  @@index([seasonId, rank])
+  @@index([userId])
+  @@map("season_results")
 }
