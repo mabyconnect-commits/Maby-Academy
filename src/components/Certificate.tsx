@@ -33,7 +33,7 @@ export function Certificate({
   courseTitle,
   issuedAt,
   serial,
-  founderName = "Mabi",
+  founderName = "Maby",
   finalScore,
   revokedAt,
 }: {

@@ -228,7 +228,7 @@ DATABASE_URL="<your Neon pooled string>" \
 You should see:
 
 ```
-✓ Mabi <mabyconnect@gmail.com>: STUDENT → ADMIN
+✓ Maby <mabyconnect@gmail.com>: STUDENT → ADMIN
 ```
 
 3. Refresh the site. **Instructor tools** now appears in your dashboard

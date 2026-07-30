@@ -142,7 +142,7 @@ async function main() {
     where: { email: "mabi@mabyacademy.com" },
     create: {
       email: "mabi@mabyacademy.com",
-      name: "Mabi",
+      name: "Maby",
       passwordHash,
       role: "ADMIN",
       referralCode: "MABY0001",
@@ -151,7 +151,10 @@ async function main() {
       timezone: "Africa/Lagos",
       bio: "Founder of Maby Academy. Teaching crypto, capital and character — in that order of urgency, never in that order of importance.",
     },
-    update: { role: "ADMIN" },
+    // Refreshes the display name as well as the role, so a re-run repairs
+    // an existing record. Refreshing only the role left the founder showing
+    // as "Mabi" on every course card the account authored.
+    update: { role: "ADMIN", name: "Maby" },
   });
 
   const instructorSeed = [
@@ -758,7 +761,7 @@ async function main() {
     },
     {
       title: "Community call: what we're building this quarter",
-      description: "Where the academy is going, what's coming, and open Q&A with Mabi.",
+      description: "Where the academy is going, what's coming, and open Q&A with Maby.",
       hostId: mabi.id,
       courseId: null,
       startsAt: new Date(Date.now() - 9 * day),

@@ -113,7 +113,7 @@ const AUTHORS: {
 }[] = [
   {
     email: "mabi@mabyacademy.com",
-    name: "Mabi",
+    name: "Maby",
     role: "ADMIN",
     referralCode: "MABY0001",
     bio: "Founder of Maby Academy. Teaching crypto, capital and character — in that order of urgency, never in that order of importance.",
