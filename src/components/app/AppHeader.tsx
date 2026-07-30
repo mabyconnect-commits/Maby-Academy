@@ -40,7 +40,11 @@ export function AppHeader({
       <div className="flex min-w-0 items-center gap-3">
         {/* The mark stands in for the sidebar logo on phones, where the
             sidebar isn't rendered at all. */}
-        <Link href="/" className="lg:hidden" aria-label="Maby Academy home">
+        <Link
+          href="/"
+          className="-m-1.5 p-1.5 lg:hidden"
+          aria-label="Maby Academy home"
+        >
           <LogoMark size={24} className="text-mist-100" />
         </Link>
         <h1 className="min-w-0 truncate text-base font-extrabold text-mist-100 lg:text-lg">

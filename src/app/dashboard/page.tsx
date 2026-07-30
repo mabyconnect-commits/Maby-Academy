@@ -36,7 +36,7 @@ export default async function DashboardPage() {
     // The design's dashboard is a two-column grid that collapses to one — the
     // right rail is context (what's next, what you earned, what's due), never
     // required to make sense of the left.
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid items-start gap-5 grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_320px]">
       {/* min-w-0: on mobile this is a single auto-sized grid track, so without
           it the longest course title sets the track width and the page grows
           wider than the viewport. */}

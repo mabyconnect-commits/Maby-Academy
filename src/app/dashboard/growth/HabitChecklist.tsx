@@ -84,7 +84,7 @@ export function HabitChecklist({ habits }: { habits: Habit[] }) {
             <input type="hidden" name="habitId" value={habit.id} />
             <button
               type="submit"
-              className="text-xs text-mist-400 hover:text-flag-400 px-2 py-1 rounded"
+              className="rounded px-2 py-2 text-xs text-mist-400 hover:text-flag-400"
               aria-label={`Archive ${habit.name}`}
             >
               Archive

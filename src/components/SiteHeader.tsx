@@ -39,7 +39,10 @@ export async function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3.5 px-4 py-4 sm:px-6">
         <Link
           href="/"
-          className="flex items-center gap-2.5"
+          // -my-1/py-1 lifts the tap area past 32px without moving the mark.
+          // The logo is the main way home on a phone, so it has to be easy to
+          // hit; a 30px target is a miss for a lot of thumbs.
+          className="-my-1 flex items-center gap-2.5 py-1"
           aria-label="Maby Academy home"
         >
           <LogoMark size={30} className="text-mist-100" />

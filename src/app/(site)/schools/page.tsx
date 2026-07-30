@@ -109,7 +109,7 @@ export default async function SchoolsPage() {
               </LinkButton>
               <Link
                 href={`/courses`}
-                className="text-[11px] font-semibold text-mist-400 hover:text-mist-200"
+                className="-my-2 inline-flex items-center py-2 text-[11px] font-semibold text-mist-400 hover:text-mist-200"
               >
                 All courses →
               </Link>

@@ -9,6 +9,7 @@ import { skillToIncome } from "./skill-to-income";
 import { emotionalIntelligence } from "./emotional-intelligence";
 import { wisdomForLiving } from "./wisdom-for-living";
 import { defiAndWeb3 } from "./defi-and-web3";
+import { securityAndScams } from "./security-and-scams";
 
 /**
  * The authored curriculum.
@@ -29,6 +30,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   emotionalIntelligence,
   wisdomForLiving,
   defiAndWeb3,
+  securityAndScams,
 ];
 
 export { loadCourse, loadCourses } from "./load";

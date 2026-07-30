@@ -62,7 +62,11 @@ export function LessonEditor({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 p-3.5 text-left transition-colors hover:bg-gold-500/6"
+        // flex-wrap so the gap warning drops to its own line rather than
+        // running off the right of a phone. The longest warning is 40
+        // characters, which cannot fit beside a title at 320px however hard
+        // the title is truncated.
+        className="flex w-full flex-wrap items-center gap-x-3 gap-y-2 p-3.5 text-left transition-colors hover:bg-gold-500/6"
       >
         <span className="min-w-0 flex-1">
           <span className="block truncate text-xs font-bold text-mist-100">
@@ -78,7 +82,9 @@ export function LessonEditor({
             with no condition completes on a click, which is exactly what the
             academy promises never happens. */}
         {gap ? (
-          <Pill tone="ember" shape="tag" className="shrink-0">
+          // Not shrink-0: the warning has to be allowed to wrap its own text
+          // once it has a line to itself, or it overflows again.
+          <Pill tone="ember" shape="tag" className="max-w-full leading-[1.4]">
             {gap}
           </Pill>
         ) : (

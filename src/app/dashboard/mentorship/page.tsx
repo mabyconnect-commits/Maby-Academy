@@ -37,7 +37,7 @@ export default async function MentorshipPage() {
   const past = assignment.sessions.filter((s) => !upcoming.includes(s));
 
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="grid items-start gap-5 grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="flex flex-col gap-5">
         <Card pad="wide">
           <PanelHead title="Your mentor" />

@@ -70,7 +70,7 @@ export default async function LessonPage({
           lesson body or outline sizes the column — and the column can then
           exceed the page. Both children must be allowed to be narrower than
           their content. */}
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_310px]">
+      <div className="grid items-start gap-8 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_310px]">
         {/* ------------------------------------------------------------- */}
         {/* Lesson body                                                    */}
         {/* ------------------------------------------------------------- */}

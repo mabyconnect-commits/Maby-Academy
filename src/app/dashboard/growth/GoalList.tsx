@@ -94,7 +94,7 @@ export function GoalList({ goals }: { goals: Goal[] }) {
                 <input type="hidden" name="goalId" value={goal.id} />
                 <button
                   type="submit"
-                  className="text-xs text-mist-400 hover:text-gold-300 px-2 py-1 rounded"
+                  className="rounded px-2 py-2 text-xs text-mist-400 hover:text-gold-300"
                 >
                   {goal.sharedWithMentor ? "Make private" : "Share with mentor"}
                 </button>

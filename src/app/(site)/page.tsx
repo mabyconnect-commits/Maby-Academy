@@ -206,7 +206,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/courses"
-              className="text-[11px] font-semibold text-gold-500 hover:text-gold-400"
+              className="-my-2 inline-flex items-center py-2 text-[11px] font-semibold text-gold-500 hover:text-gold-400"
             >
               Every course →
             </Link>

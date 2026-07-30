@@ -84,7 +84,7 @@ export default async function CoursePage({
         </Link>
       </nav>
 
-      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid items-start gap-10 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* ------------------------------------------------------------- */}
         {/* Main column                                                    */}
         {/* ------------------------------------------------------------- */}
