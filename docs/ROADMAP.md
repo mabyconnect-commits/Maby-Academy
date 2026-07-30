@@ -10,7 +10,7 @@ Every item is marked so nothing gets lost across sessions.
 | ⬜ | Not started |
 | 🔒 | Deliberately deferred (needs legal, compliance or a paid provider) |
 
-Last updated: Phase B (partials closed — editorial workflow, finance, security, levels, light mode, legal).
+Last updated: Phase B (partials closed — editorial workflow, finance, security, levels, light mode, legal; design system applied to the catalogue, course detail and lesson player).
 
 ---
 
@@ -304,8 +304,10 @@ Last updated: Phase B (partials closed — editorial workflow, finance, security
 | --- | --- | --- |
 | Dark mode | ✅ | |
 | Light mode | ✅ | Token remap, `prefers-color-scheme` + `data-theme` override |
-| Design tokens | ✅ | |
+| Design tokens | ✅ | Incl. `--color-rule` hairlines that flip per theme |
 | Component library | 🟡 | Buttons, cards, forms, pills, progress, stats |
+| Design applied to learner surfaces | 🟡 | Dashboard, certificates, catalogue, course detail, lesson player done; admin + community pending |
+| Responsive audit at 390px | 🟡 | Public course surfaces + dashboard verified in both schemes; admin pending |
 | Keyboard navigation + focus states | ✅ | Global focus-visible ring |
 | Semantic HTML + ARIA | ✅ | Progressbar, alerts, nav landmarks |
 | Reduced motion | ✅ | |
