@@ -134,10 +134,10 @@ export default async function DashboardPage() {
               {enrollments.slice(0, 4).map((e) => (
                 <Link key={e.id} href={`/courses/${e.course.slug}`} className="block">
                   <div className="mb-[7px] flex items-center justify-between gap-3">
-                    <span className="truncate text-[12.5px] font-semibold text-mist-200">
+                    <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-mist-200">
                       {e.course.title}
                     </span>
-                    <span className="text-xs font-bold text-gold-500 tabular-nums">
+                    <span className="shrink-0 text-xs font-bold text-gold-500 tabular-nums">
                       {e.progressPercent}%
                     </span>
                   </div>
