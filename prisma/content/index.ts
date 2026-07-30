@@ -10,6 +10,8 @@ import { emotionalIntelligence } from "./emotional-intelligence";
 import { wisdomForLiving } from "./wisdom-for-living";
 import { defiAndWeb3 } from "./defi-and-web3";
 import { securityAndScams } from "./security-and-scams";
+import { stablecoinsAndBorders } from "./stablecoins-and-borders";
+import { marketStructure } from "./market-structure";
 
 /**
  * The authored curriculum.
@@ -31,6 +33,8 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   wisdomForLiving,
   defiAndWeb3,
   securityAndScams,
+  stablecoinsAndBorders,
+  marketStructure,
 ];
 
 export { loadCourse, loadCourses } from "./load";
