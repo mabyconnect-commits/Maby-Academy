@@ -125,20 +125,33 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
    * left behind by an interrupted run is obvious rather than looking like a
    * legitimate first module.
    */
-  const PARK_OFFSET = 10_000;
   const existingModules = await db.module.findMany({
     where: { courseId: row.id },
-    select: { id: true },
+    select: { id: true, sortOrder: true },
     orderBy: { sortOrder: "asc" },
   });
-  await db.$transaction(
-    existingModules.map((m, i) =>
-      db.module.update({
-        where: { id: m.id },
-        data: { sortOrder: PARK_OFFSET + i },
-      }),
-    ),
-  );
+
+  /**
+   * Park each module at a position above every position currently in use.
+   *
+   * A fixed offset is not safe: an earlier interrupted run can leave rows
+   * already parked at that offset, and the update then collides with them. By
+   * deriving the range from the current maximum and walking rows in ascending
+   * order, every write lands somewhere provably free — the constraint is
+   * checked per statement, not at commit, so transient collisions matter.
+   */
+  const maxSort = existingModules.reduce((m, x) => Math.max(m, x.sortOrder), -1);
+  // Also clear the positions the *new* content is about to occupy. Parking
+  // only above the old maximum leaves parked rows sitting inside the incoming
+  // range whenever a course gains modules — a two-module course re-authored
+  // with four parks at 2 and 3, and then the new module 2 collides.
+  const parkBase = Math.max(maxSort, course.modules.length - 1) + 1;
+  for (const [i, m] of existingModules.entries()) {
+    await db.module.update({
+      where: { id: m.id },
+      data: { sortOrder: parkBase + i },
+    });
+  }
 
   for (const [moduleIndex, module] of course.modules.entries()) {
     const existingModule = await db.module.findFirst({
