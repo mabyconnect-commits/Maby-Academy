@@ -12,6 +12,7 @@ import { defiAndWeb3 } from "./defi-and-web3";
 import { securityAndScams } from "./security-and-scams";
 import { stablecoinsAndBorders } from "./stablecoins-and-borders";
 import { marketStructure } from "./market-structure";
+import { leverageWithoutRuin } from "./leverage-without-ruin";
 
 /**
  * The authored curriculum.
@@ -35,6 +36,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   securityAndScams,
   stablecoinsAndBorders,
   marketStructure,
+  leverageWithoutRuin,
 ];
 
 export { loadCourse, loadCourses } from "./load";
