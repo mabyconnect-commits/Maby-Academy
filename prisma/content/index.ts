@@ -6,6 +6,7 @@ import { characterAndCalling } from "./character-and-calling";
 import { riskFirstTrading } from "./risk-first-trading";
 import { readingTheChain } from "./reading-the-chain";
 import { skillToIncome } from "./skill-to-income";
+import { emotionalIntelligence } from "./emotional-intelligence";
 
 /**
  * The authored curriculum.
@@ -23,6 +24,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   riskFirstTrading,
   readingTheChain,
   skillToIncome,
+  emotionalIntelligence,
 ];
 
 export { loadCourse, loadCourses } from "./load";
