@@ -1,5 +1,14 @@
 import type { ContentCourse } from "./types";
 import { cryptoFromZero } from "./crypto-from-zero";
+import { moneyThatLasts } from "./money-that-lasts";
+import { strongFoundations } from "./strong-foundations";
+import { characterAndCalling } from "./character-and-calling";
+import { riskFirstTrading } from "./risk-first-trading";
+import { readingTheChain } from "./reading-the-chain";
+import { skillToIncome } from "./skill-to-income";
+import { emotionalIntelligence } from "./emotional-intelligence";
+import { wisdomForLiving } from "./wisdom-for-living";
+import { defiAndWeb3 } from "./defi-and-web3";
 
 /**
  * The authored curriculum.
@@ -9,7 +18,18 @@ import { cryptoFromZero } from "./crypto-from-zero";
  * the skeleton and this becomes the content. That precedence is why the loader
  * updates in place rather than recreating: student progress must survive it.
  */
-export const AUTHORED_COURSES: ContentCourse[] = [cryptoFromZero];
+export const AUTHORED_COURSES: ContentCourse[] = [
+  cryptoFromZero,
+  moneyThatLasts,
+  strongFoundations,
+  characterAndCalling,
+  riskFirstTrading,
+  readingTheChain,
+  skillToIncome,
+  emotionalIntelligence,
+  wisdomForLiving,
+  defiAndWeb3,
+];
 
 export { loadCourse, loadCourses } from "./load";
 export type { ContentCourse, ContentLesson, ContentModule } from "./types";

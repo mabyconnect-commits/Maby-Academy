@@ -37,7 +37,10 @@ export default async function DashboardPage() {
     // right rail is context (what's next, what you earned, what's due), never
     // required to make sense of the left.
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="flex flex-col gap-5">
+      {/* min-w-0: on mobile this is a single auto-sized grid track, so without
+          it the longest course title sets the track width and the page grows
+          wider than the viewport. */}
+      <div className="flex min-w-0 flex-col gap-5">
         {/* Onboarding prompt ------------------------------------------- */}
         {!profile?.completedAt && (
           <Card variant="gold" pad="wide">
@@ -134,10 +137,10 @@ export default async function DashboardPage() {
               {enrollments.slice(0, 4).map((e) => (
                 <Link key={e.id} href={`/courses/${e.course.slug}`} className="block">
                   <div className="mb-[7px] flex items-center justify-between gap-3">
-                    <span className="truncate text-[12.5px] font-semibold text-mist-200">
+                    <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-mist-200">
                       {e.course.title}
                     </span>
-                    <span className="text-xs font-bold text-gold-500 tabular-nums">
+                    <span className="shrink-0 text-xs font-bold text-gold-500 tabular-nums">
                       {e.progressPercent}%
                     </span>
                   </div>
@@ -190,7 +193,7 @@ export default async function DashboardPage() {
       {/* --------------------------------------------------------------- */}
       {/* Right rail                                                       */}
       {/* --------------------------------------------------------------- */}
-      <div className="flex flex-col gap-5">
+      <div className="flex min-w-0 flex-col gap-5">
         <Card>
           <PanelHead
             title="Next live session"

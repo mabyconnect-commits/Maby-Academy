@@ -43,7 +43,7 @@ export function AppHeader({
         <Link href="/" className="lg:hidden" aria-label="Maby Academy home">
           <LogoMark size={24} className="text-mist-100" />
         </Link>
-        <h1 className="truncate text-base font-extrabold text-mist-100 lg:text-lg">
+        <h1 className="min-w-0 truncate text-base font-extrabold text-mist-100 lg:text-lg">
           {title}
         </h1>
       </div>

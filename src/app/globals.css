@@ -170,6 +170,17 @@
   --color-rule-strong: rgb(11 11 13 / 0.18);
 }
 
+/* A stray element wider than the screen shifts the whole page and clips text
+   at both edges on mobile. `overflow-x: clip` stops that horizontal scroll
+   without establishing a scroll container, so `position: sticky` headers keep
+   working (which `overflow-x: hidden` would break). A belt-and-braces guard —
+   individual overflows are still fixed at their source. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   background:
     radial-gradient(1100px 600px at 12% -8%, var(--page-glow-gold), transparent 60%),

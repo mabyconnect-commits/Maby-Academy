@@ -132,7 +132,7 @@ export default async function PricingPage() {
             <Link
               key={course.id}
               href={`/courses/${course.slug}`}
-              className="surface flex items-center justify-between gap-4 p-4 transition-colors hover:border-gold-500/50"
+              className="surface flex min-w-0 items-center justify-between gap-4 p-4 transition-colors hover:border-gold-500/50"
             >
               <div className="min-w-0">
                 <p className="truncate text-[13px] font-bold text-mist-100">

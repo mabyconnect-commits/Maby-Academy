@@ -18,6 +18,7 @@ const COLUMNS = [
       { href: "/schools", label: "Schools" },
       { href: "/pricing", label: "Pricing" },
       { href: "/faq", label: "FAQ" },
+      { href: "/contact", label: "Contact" },
       { href: "/dashboard", label: "My dashboard" },
       { href: "/dashboard/referrals", label: "Referral programme" },
     ],
@@ -27,12 +28,9 @@ const COLUMNS = [
     links: [
       { href: "/verify", label: "Verify a certificate" },
       { href: "/legal/risk-disclosure", label: "Risk disclosure" },
-      {
-        href: "/legal/financial-education-disclaimer",
-        label: "Education disclaimer",
-      },
-      { href: "/legal/community-guidelines", label: "Community guidelines" },
+      { href: "/legal/terms", label: "Terms" },
       { href: "/legal/privacy", label: "Privacy" },
+      { href: "/legal/refund", label: "Refunds" },
     ],
   },
 ];

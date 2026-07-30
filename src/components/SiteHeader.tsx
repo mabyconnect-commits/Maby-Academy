@@ -28,6 +28,7 @@ const MOBILE_NAV = [
   ...NAV,
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export async function SiteHeader() {

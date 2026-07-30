@@ -112,6 +112,34 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
   const keptModuleIds: string[] = [];
   const keptLessonIds: string[] = [];
 
+  /**
+   * Park every existing module out of the way before assigning final positions.
+   *
+   * `Module` carries `@@unique([courseId, sortOrder])`, so writing the new
+   * ordering directly collides with whatever already occupies those slots —
+   * which happens whenever a slug is first created by the inline seed and then
+   * re-authored here with different module titles. Moving them into a high,
+   * disjoint range first means every subsequent write lands on a free slot.
+   *
+   * Negative numbers would work equally well; a high offset is used so a row
+   * left behind by an interrupted run is obvious rather than looking like a
+   * legitimate first module.
+   */
+  const PARK_OFFSET = 10_000;
+  const existingModules = await db.module.findMany({
+    where: { courseId: row.id },
+    select: { id: true },
+    orderBy: { sortOrder: "asc" },
+  });
+  await db.$transaction(
+    existingModules.map((m, i) =>
+      db.module.update({
+        where: { id: m.id },
+        data: { sortOrder: PARK_OFFSET + i },
+      }),
+    ),
+  );
+
   for (const [moduleIndex, module] of course.modules.entries()) {
     const existingModule = await db.module.findFirst({
       where: { courseId: row.id, title: module.title },
