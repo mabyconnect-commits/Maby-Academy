@@ -11,9 +11,10 @@ import { getCurrentUser } from "@/lib/auth/session";
  */
 const NAV = [
   { href: "/courses", label: "Courses" },
-  { href: "/#pillars", label: "Pillars" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/about", label: "About" },
   { href: "/community", label: "Community" },
-  { href: "/#how", label: "How it works" },
+  { href: "/faq", label: "FAQ" },
   { href: "/verify", label: "Verify" },
 ];
 

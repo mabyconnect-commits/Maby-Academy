@@ -215,6 +215,132 @@ export const LEGAL_PAGES = {
       },
     ],
   },
+
+  terms: {
+    title: "Terms of use",
+    summary:
+      "The plain-language agreement for using Maby Academy. By creating an account you agree to these.",
+    updated: UPDATED,
+    sections: [
+      {
+        heading: "What Maby Academy is",
+        body: [
+          "Maby Academy is an education provider. We give you access to courses, assignments, certificates and a community. We are not a broker, an exchange, a fund, a wallet, or a financial adviser, and nothing here is a personal recommendation.",
+          "By creating an account and using the platform, you agree to these terms, to the risk disclosure, and to the financial education disclaimer.",
+        ],
+      },
+      {
+        heading: "Your account",
+        body: [
+          "You are responsible for keeping your login secure and for everything done under your account. Give us accurate information, and don't share your account or impersonate anyone.",
+          "You must be old enough to enter a binding agreement in your jurisdiction to hold an account.",
+        ],
+      },
+      {
+        heading: "Acceptable use",
+        body: [
+          "Use the platform for your own learning. Don't scrape or resell the courses, don't disrupt the service, don't upload malware, and don't harass other members. Community conduct is governed by the community guidelines.",
+          "Don't use the academy, its community, or its instructors' names to solicit money, promote investments, or run schemes. We remove accounts that do.",
+        ],
+      },
+      {
+        heading: "Certificates",
+        body: [
+          "A certificate reflects work you completed under the conditions in force at the time. We can revoke a certificate obtained through fraud or a breach of these terms; a revoked certificate is marked revoked on its public page rather than deleted.",
+        ],
+      },
+      {
+        heading: "Payments",
+        body: [
+          "Some courses carry a one-time price shown before you enrol. Payments are handled by our payment provider; we don't store your card details. Refunds are governed by the refund policy.",
+        ],
+      },
+      {
+        heading: "No warranty, and the limits of our liability",
+        body: [
+          "The platform is provided as-is. We work to keep it accurate and available, but we don't guarantee it will be error-free or uninterrupted, and education can never guarantee an outcome — financial or otherwise.",
+          "To the extent the law allows, Maby Academy is not liable for losses arising from your use of what you learn here, including any trading, investing or financial decisions, which are yours alone.",
+        ],
+      },
+      {
+        heading: "Changes and ending your account",
+        body: [
+          "We may update these terms; material changes will be signposted. You can close your account at any time. We can suspend or close an account that breaches these terms.",
+          "Questions about these terms? Reach us through the contact page.",
+        ],
+      },
+    ],
+  },
+
+  refund: {
+    title: "Refund policy",
+    summary:
+      "When a paid course can be refunded, and how to ask. Free courses have nothing to refund.",
+    updated: UPDATED,
+    sections: [
+      {
+        heading: "Free courses",
+        body: [
+          "The foundation courses cost nothing, so there is nothing to refund. You can stop any time.",
+        ],
+      },
+      {
+        heading: "Paid courses",
+        body: [
+          "A paid course is a one-time purchase, not a subscription — there is no recurring charge to cancel.",
+          "If you bought a paid course and haven't made meaningful progress through it, you can request a refund within 14 days of purchase. 'Meaningful progress' means completing a substantial share of the lessons or submitting graded assignments — access to the full material after significant use is the value you paid for.",
+        ],
+      },
+      {
+        heading: "How to request one",
+        body: [
+          "Contact us through the contact page or open a support ticket with your account email and the course. We aim to respond within a few working days.",
+          "Approved refunds go back to your original payment method through our payment provider. How long it takes to appear depends on the provider and your bank.",
+        ],
+      },
+      {
+        heading: "When we can't refund",
+        body: [
+          "We generally can't refund a course you've substantially completed or earned a certificate in, a purchase outside the 14-day window, or a charge reversed through your bank while a request is already open with us.",
+          "Your statutory rights, where they apply, are not affected by this policy.",
+        ],
+      },
+    ],
+  },
+
+  cookies: {
+    title: "Cookie policy",
+    summary:
+      "What we store in your browser and why. We keep it to what the academy needs to work.",
+    updated: UPDATED,
+    sections: [
+      {
+        heading: "What we use",
+        body: [
+          "We use a small number of cookies and similar browser storage, kept to what the platform genuinely needs rather than what an ad network would want.",
+        ],
+      },
+      {
+        heading: "Essential cookies",
+        body: [
+          "These keep you signed in, keep your session secure, and remember basic preferences like light or dark mode. The platform can't work without them, so they're always on.",
+        ],
+      },
+      {
+        heading: "What we don't do",
+        body: [
+          "We don't sell your data, and we don't run third-party advertising trackers that follow you around the web. Any analytics we use are to understand how the academy is used in aggregate, not to build a profile of you.",
+        ],
+      },
+      {
+        heading: "Managing cookies",
+        body: [
+          "You can clear or block cookies in your browser settings, but blocking the essential ones will sign you out and stop parts of the platform from working.",
+          "For how we handle personal data more broadly, see the privacy policy.",
+        ],
+      },
+    ],
+  },
 } satisfies Record<string, LegalPage>;
 
 export type LegalSlug = keyof typeof LEGAL_PAGES;
