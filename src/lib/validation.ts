@@ -111,5 +111,25 @@ export const reviewSchema = z.object({
 
 export const enrollSchema = z.object({ courseId: z.string().min(1) });
 
+// --- Lesson questions box ------------------------------------------------
+
+export const lessonQuestionSchema = z.object({
+  lessonId: z.string().min(1),
+  body: z
+    .string()
+    .trim()
+    .min(5, "Add a little detail so someone can actually help.")
+    .max(4000, "That question is too long — trim it down."),
+});
+
+export const lessonAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  body: z
+    .string()
+    .trim()
+    .min(2, "Write your answer first.")
+    .max(8000, "That answer is too long — trim it down."),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
