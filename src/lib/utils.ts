@@ -50,3 +50,19 @@ export function initials(name: string) {
 export function pluralize(n: number, singular: string, plural?: string) {
   return `${n} ${n === 1 ? singular : (plural ?? `${singular}s`)}`;
 }
+
+/**
+ * Fisher–Yates shuffle, returning a new array (never mutates the input).
+ *
+ * Used to randomise quiz option order per view, so the correct answer's
+ * position carries no signal — a quiz whose answer is always the first option
+ * is not a test.
+ */
+export function shuffle<T>(input: readonly T[]): T[] {
+  const a = [...input];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
