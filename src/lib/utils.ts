@@ -6,11 +6,21 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatMoney(minor: number, currency = "USD") {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: minor % 100 === 0 ? 0 : 2,
-  }).format(minor / 100);
+  // The default only applies to `undefined`; a course row can carry an empty
+  // string or a junk code, and Intl throws a RangeError on those — which,
+  // since this runs inside server components, would crash the whole page. A
+  // price formatter must never be able to do that.
+  const code = (currency || "USD").trim().toUpperCase();
+  const minimumFractionDigits = minor % 100 === 0 ? 0 : 2;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits,
+    }).format(minor / 100);
+  } catch {
+    return `${code} ${(minor / 100).toLocaleString("en-US", { minimumFractionDigits })}`;
+  }
 }
 
 export function formatDuration(seconds: number) {

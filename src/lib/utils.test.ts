@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { shuffle } from "./utils";
+import { formatMoney, shuffle } from "./utils";
+
+describe("formatMoney", () => {
+  it("formats a valid currency normally", () => {
+    expect(formatMoney(1000, "USD")).toContain("10");
+    expect(formatMoney(0, "USD")).toContain("0");
+  });
+
+  it("never throws on an empty or invalid currency code", () => {
+    // A course row with a blank or junk currency must not crash the page.
+    expect(() => formatMoney(5000, "")).not.toThrow();
+    expect(() => formatMoney(5000, "NOTACODE")).not.toThrow();
+    expect(formatMoney(5000, "")).toContain("50");
+    expect(formatMoney(5000, "NOTACODE")).toContain("50");
+  });
+})
 
 describe("shuffle", () => {
   it("returns a new array without mutating the input", () => {
