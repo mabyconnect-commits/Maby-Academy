@@ -113,6 +113,13 @@ model User {
   longestStreak  Int       @default(0)
   lastActiveDate DateTime?
 
+  /**
+   * When the member confirmed they joined the academy's communities and
+   * channels. Free enrolment is gated on this: the price of a free course is
+   * being part of the community. Null means they haven't done it yet.
+   */
+  communitiesJoinedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -55,6 +55,24 @@ export default async function DashboardPage() {
           </Card>
         )}
 
+        {/* Community-join gate ----------------------------------------- */}
+        {!user.communitiesJoinedAt && (
+          <Card variant="gold" pad="wide">
+            <p className="eyebrow">Unlock free courses</p>
+            <h2 className="mt-2.5 text-[17px] leading-[1.25] font-extrabold text-mist-100 sm:text-[19px]">
+              Join our communities to learn for free.
+            </h2>
+            <p className="mt-2.5 text-xs text-mist-400">
+              Our courses are free — the one thing we ask is that you join the
+              WhatsApp groups and Telegram channels you&apos;ll be growing
+              alongside. One small step, then everything unlocks.
+            </p>
+            <LinkButton href="/communities/join" className="mt-4" size="lg">
+              Join &amp; unlock
+            </LinkButton>
+          </Card>
+        )}
+
         {/* Resume ------------------------------------------------------ */}
         {resume ? (
           <Card

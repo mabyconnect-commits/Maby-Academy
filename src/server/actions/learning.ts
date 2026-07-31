@@ -73,12 +73,65 @@ export async function enrollAction(
     if (course.priceMinor > 0) {
       const checkout = await startCourseCheckout({ userId: user.id, courseId });
       destination = checkout.paymentUrl;
+    } else if (!user.communitiesJoinedAt) {
+      // The price of a free course is joining the community. Send them to do
+      // that first, carrying the course so we can enrol them the moment they
+      // confirm — no second click on the course page.
+      const params = new URLSearchParams({ course: slug, courseId });
+      destination = `/communities/join?${params.toString()}`;
     } else {
       await enrollUser(user.id, courseId);
       revalidatePath(`/courses/${slug}`);
       revalidatePath("/dashboard");
       destination = slug ? `/courses/${slug}` : "/dashboard";
     }
+  } catch (error) {
+    return toFormState(error);
+  }
+
+  redirect(destination);
+}
+
+/**
+ * Confirm the member has joined the academy's communities and channels, which
+ * unlocks free enrolment. If they arrived here from a free course (courseId
+ * present), enrol them straight away so the flow completes in one step.
+ *
+ * We cannot verify a WhatsApp or Telegram join through an API, so this is an
+ * honest self-attestation — the same shape as the reflection gate: the point is
+ * that the member has actually done the thing, and the UI says so plainly.
+ */
+export async function confirmCommunitiesAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  let destination = "/dashboard";
+
+  try {
+    const user = await requireUser();
+    const slug = String(formData.get("slug") || "");
+    const courseId = String(formData.get("courseId") || "");
+
+    if (!user.communitiesJoinedAt) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { communitiesJoinedAt: new Date() },
+      });
+    }
+
+    // Enrol the pending free course, if there is one. Ignore a failure (e.g. a
+    // paid course slipped through) — they still land on the course page.
+    if (courseId) {
+      try {
+        await enrollUser(user.id, courseId);
+      } catch {
+        /* fall through to the redirect */
+      }
+    }
+
+    revalidatePath("/dashboard");
+    if (slug) revalidatePath(`/courses/${slug}`);
+    destination = slug ? `/courses/${slug}` : "/dashboard";
   } catch (error) {
     return toFormState(error);
   }
