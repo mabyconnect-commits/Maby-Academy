@@ -60,6 +60,16 @@ const schema = z.object({
     .min(32, "SESSION_SECRET must be at least 32 characters"),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
   REFERRAL_COMMISSION_RATES: z.string().default("0.10,0.05,0.02"),
+  /**
+   * Optional one-time bootstrap: when set, a logged-in member can promote
+   * their own account to ADMIN at /setup/admin by entering this secret. Leave
+   * it unset to keep the feature disabled; remove it again once you have your
+   * first admin.
+   */
+  ADMIN_BOOTSTRAP_SECRET: z
+    .string()
+    .min(16, "ADMIN_BOOTSTRAP_SECRET must be at least 16 characters")
+    .optional(),
 });
 
 const parsed = schema.safeParse({
@@ -73,6 +83,7 @@ const parsed = schema.safeParse({
     (isSetupMode ? randomBytes(32).toString("hex") : undefined),
   SESSION_TTL_DAYS: process.env.SESSION_TTL_DAYS,
   REFERRAL_COMMISSION_RATES: process.env.REFERRAL_COMMISSION_RATES,
+  ADMIN_BOOTSTRAP_SECRET: process.env.ADMIN_BOOTSTRAP_SECRET?.trim() || undefined,
 });
 
 if (!parsed.success) {
