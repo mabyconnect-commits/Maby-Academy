@@ -43,9 +43,14 @@ export default async function GradeSubmissionPage({
         </Link>
       </nav>
 
-      <div className="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
+      {/* minmax(0,1fr) + min-w-0 on the children: an `auto`/`1fr` grid track
+          takes its minimum from the item's min-content, so a long word in the
+          prose, a wide URL, or the pre-wrapped answer can size the column and
+          push the whole page past the viewport on a phone. Both children must
+          be allowed to be narrower than their content. */}
+      <div className="grid grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
         {/* Student's work ------------------------------------------------ */}
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <header>
             <div className="flex flex-wrap items-center gap-2">
               <StatusPill status={submission.status} />
@@ -132,7 +137,7 @@ export default async function GradeSubmissionPage({
         </div>
 
         {/* Grading panel -------------------------------------------------- */}
-        <aside className="lg:sticky lg:top-24">
+        <aside className="min-w-0 lg:sticky lg:top-24">
           <Card>
             <h2 className="text-sm font-semibold text-mist-100">Grade</h2>
             <p className="mt-1 text-xs text-mist-400">
