@@ -251,6 +251,7 @@ enum Pillar {
   HEALTH
   MINDSET
   LIFE_SKILLS
+  AI
 }
 
 enum CourseLevel {

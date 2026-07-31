@@ -65,7 +65,7 @@ async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 12);
 
   // -------------------------------------------------------------------
-  // Categories (the six pillars)
+  // Categories (the pillars)
   // -------------------------------------------------------------------
   const categorySeed = [
     {
@@ -121,6 +121,15 @@ async function main() {
       sortOrder: 6,
       description:
         "Sleep, training, focus and emotional control. A broken body can't hold a big vision.",
+    },
+    {
+      name: "AI & Applied Tech",
+      slug: "ai-and-applied-tech",
+      pillar: "AI" as const,
+      iconEmoji: "🤖",
+      sortOrder: 7,
+      description:
+        "Use AI as a tool without being used by it — prompt well, verify everything, and turn it into real work.",
     },
   ];
 

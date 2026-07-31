@@ -20,6 +20,7 @@ const PILLAR_ICONS: Record<string, IconName> = {
   FAITH: "journal",
   HEALTH: "seedling",
   MINDSET: "target",
+  AI: "spark",
 };
 
 export default async function SchoolsPage() {
