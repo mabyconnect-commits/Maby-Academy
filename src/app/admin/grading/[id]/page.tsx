@@ -4,13 +4,13 @@ import type { Metadata } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { getSubmissionForGrader } from "@/server/services/assessment";
 import { Avatar, Card, Pill, StatusPill } from "@/components/ui";
+import { RichText } from "@/components/RichText";
+import { parseRubric } from "@/lib/rubric";
 import { formatDate } from "@/lib/utils";
 import { GradeForm } from "./GradeForm";
 
 export const metadata: Metadata = { title: "Grade submission" };
 export const dynamic = "force-dynamic";
-
-type RubricCriterion = { name: string; description?: string; maxPoints: number };
 
 export default async function GradeSubmissionPage({
   params,
@@ -27,9 +27,13 @@ export default async function GradeSubmissionPage({
   if (!submission) notFound();
 
   const { assignment, student } = submission;
-  const rubric = Array.isArray(assignment.rubric)
-    ? (assignment.rubric as RubricCriterion[])
-    : [];
+  // Parsed rather than cast. A blind cast let rubrics authored in the
+  // criterion/weight shape through as objects with no `name`, which the form
+  // then keyed its scores under "undefined" and totalled as zero — so a
+  // grader could submit a mark of 0 without noticing anything was wrong.
+  // The loader now normalises on the way in; this accepts both regardless, so
+  // a database seeded before that fix still grades correctly.
+  const rubric = parseRubric(assignment.rubric);
 
   return (
     <div className="space-y-6">
@@ -72,11 +76,11 @@ export default async function GradeSubmissionPage({
             <h2 className="text-sm font-semibold text-mist-100">
               The assignment
             </h2>
-            <div className="mt-3 prose-lesson text-sm">
-              {assignment.instructions.split("\n\n").map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-            </div>
+            <RichText
+              content={assignment.instructions}
+              className="mt-3 prose-lesson text-sm"
+              headings={false}
+            />
           </Card>
 
           <Card>

@@ -9,6 +9,16 @@ import { skillToIncome } from "./skill-to-income";
 import { emotionalIntelligence } from "./emotional-intelligence";
 import { wisdomForLiving } from "./wisdom-for-living";
 import { defiAndWeb3 } from "./defi-and-web3";
+import { securityAndScams } from "./security-and-scams";
+import { stablecoinsAndBorders } from "./stablecoins-and-borders";
+import { marketStructure } from "./market-structure";
+import { leverageWithoutRuin } from "./leverage-without-ruin";
+import { tokenomics } from "./tokenomics";
+import { buildTheBusiness } from "./build-the-business";
+import { leadingOthers } from "./leading-others";
+import { deepFocus } from "./deep-focus";
+import { queryTheChain } from "./query-the-chain";
+import { restAndRecovery } from "./rest-and-recovery";
 
 /**
  * The authored curriculum.
@@ -29,6 +39,16 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   emotionalIntelligence,
   wisdomForLiving,
   defiAndWeb3,
+  securityAndScams,
+  stablecoinsAndBorders,
+  marketStructure,
+  leverageWithoutRuin,
+  tokenomics,
+  buildTheBusiness,
+  leadingOthers,
+  deepFocus,
+  queryTheChain,
+  restAndRecovery,
 ];
 
 export { loadCourse, loadCourses } from "./load";

@@ -53,7 +53,12 @@ export default async function CourseBuilderPage({
   const currentStep = WORKFLOW.findIndex((w) => w.status === course.status);
 
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+    // The base `grid-cols-[minmax(0,1fr)]` is not redundant with the xl
+    // variant. Below xl this is a single implicit `auto` track, whose minimum
+    // is the item's min-content — so a long module or lesson title pushed the
+    // card past the right edge of a phone. Declaring the mobile track with an
+    // explicit 0 minimum is what keeps it inside the screen.
+    <div className="grid items-start gap-5 grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_320px]">
       <Card pad="wide">
         <div className="mb-1.5 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[17px] leading-[1.3] font-extrabold text-mist-100">
@@ -236,7 +241,7 @@ export default async function CourseBuilderPage({
           <div className="mt-3.5 border-t border-rule pt-3">
             <Link
               href={`/courses/${course.slug}`}
-              className="text-[11px] font-semibold text-gold-500 hover:text-gold-400"
+              className="-my-2 inline-flex items-center py-2 text-[11px] font-semibold text-gold-500 hover:text-gold-400"
             >
               Preview as a student →
             </Link>

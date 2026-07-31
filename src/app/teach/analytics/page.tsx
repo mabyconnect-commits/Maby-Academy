@@ -67,27 +67,35 @@ export default async function TeachAnalyticsPage() {
             {/* A monochrome gold bar chart, per the design's data-display rule
                 — one series, never a rainbow. Bars carry an accessible label
                 each, because a chart nobody can read is decoration. */}
-            <div className="mt-5 flex h-[130px] items-end gap-2">
-              {lessons.map((l, i) => (
-                <div
-                  key={l.id}
-                  className="flex h-full flex-1 flex-col items-center justify-end gap-2"
-                  title={`${l.title}: ${l.completionRate}% complete`}
-                >
+            {/* The chart scrolls in its own box rather than compressing to
+                fit. A forty-lesson course gives each bar under 8px at phone
+                width — unreadable, and the labels overflow the page because a
+                nowrap "L40" cannot shrink. A minimum bar width plus horizontal
+                scroll keeps every bar legible and keeps the page the width of
+                the screen. */}
+            <div className="mt-5 -mx-1 overflow-x-auto px-1 pb-1">
+              <div className="flex h-[130px] items-end gap-2">
+                {lessons.map((l, i) => (
                   <div
-                    className={cn(
-                      "w-full rounded-t-[4px]",
-                      i === worst.index ? "bg-ember-500" : "bg-gold-500",
-                    )}
-                    style={{ height: `${Math.max(2, l.completionRate)}%` }}
-                    role="img"
-                    aria-label={`Lesson ${i + 1}, ${l.title}: ${l.completionRate} percent completed`}
-                  />
-                  <span className="text-[9px] font-semibold text-mist-400">
-                    L{i + 1}
-                  </span>
-                </div>
-              ))}
+                    key={l.id}
+                    className="flex h-full min-w-[14px] flex-1 flex-col items-center justify-end gap-2"
+                    title={`${l.title}: ${l.completionRate}% complete`}
+                  >
+                    <div
+                      className={cn(
+                        "w-full rounded-t-[4px]",
+                        i === worst.index ? "bg-ember-500" : "bg-gold-500",
+                      )}
+                      style={{ height: `${Math.max(2, l.completionRate)}%` }}
+                      role="img"
+                      aria-label={`Lesson ${i + 1}, ${l.title}: ${l.completionRate} percent completed`}
+                    />
+                    <span className="text-[9px] font-semibold text-mist-400">
+                      L{i + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {worst.index > 0 && worst.drop >= 10 && (

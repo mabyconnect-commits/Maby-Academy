@@ -66,7 +66,10 @@ export function Logo({
   return (
     <Link
       href={href}
-      className={cn("inline-flex items-center gap-2.5 group", className)}
+      // -my-1/py-1 keeps the mark exactly where it sits while lifting the tap
+      // area above the 32px floor — the logo is the primary way back to the
+      // home page on a phone, so it has to be easy to hit.
+      className={cn("group -my-1 inline-flex items-center gap-2.5 py-1", className)}
     >
       <LogoMark size={dims} className="text-mist-100" />
       {showWordmark && (

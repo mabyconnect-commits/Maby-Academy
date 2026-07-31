@@ -84,11 +84,11 @@ export default async function CoursePage({
         </Link>
       </nav>
 
-      <div className="grid lg:grid-cols-[1fr_340px] gap-10 items-start">
+      <div className="grid items-start gap-10 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* ------------------------------------------------------------- */}
         {/* Main column                                                    */}
         {/* ------------------------------------------------------------- */}
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="eyebrow flex items-center gap-1.5">
               <span aria-hidden>{course.category.iconEmoji}</span>
@@ -292,7 +292,7 @@ export default async function CoursePage({
         {/* ------------------------------------------------------------- */}
         {/* Enrolment sidebar                                              */}
         {/* ------------------------------------------------------------- */}
-        <aside className="lg:sticky lg:top-24">
+        <aside className="min-w-0 lg:sticky lg:top-24">
           {/* Gold, because on this page enrolling (or resuming) is the single
               action everything else exists to support. */}
           <Card variant="gold" id="enrol" className="scroll-mt-24">

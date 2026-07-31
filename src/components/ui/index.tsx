@@ -150,7 +150,10 @@ export function CardLink({
   return (
     <Link
       href={href}
-      className="text-[11px] font-semibold whitespace-nowrap text-gold-500 transition-colors hover:text-gold-400"
+      // The negative margin cancels the padding, so the tap area grows to a
+      // comfortable ~33px on touch without moving the link visually. An 11px
+      // label is a 17px-tall target otherwise, which is a miss on a phone.
+      className="-my-2 inline-flex items-center py-2 text-[11px] font-semibold whitespace-nowrap text-gold-500 transition-colors hover:text-gold-400"
     >
       {children}
     </Link>

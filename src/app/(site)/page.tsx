@@ -67,7 +67,10 @@ export default async function HomePage() {
       {/* Hero                                                              */}
       {/* ================================================================= */}
       <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 sm:gap-14 sm:py-20 lg:grid-cols-2 lg:py-24">
-        <div>
+        {/* min-w-0: a grid item defaults to min-width:auto, so its widest
+            unbreakable content sizes the track — and the track can then exceed
+            the container, pushing the page wider than the screen. */}
+        <div className="min-w-0">
           <p className="text-[11px] font-semibold tracking-[0.34em] text-gold-500 uppercase">
             Crypto · Finance · Faith · Wellness
           </p>
@@ -203,7 +206,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/courses"
-              className="text-[11px] font-semibold text-gold-500 hover:text-gold-400"
+              className="-my-2 inline-flex items-center py-2 text-[11px] font-semibold text-gold-500 hover:text-gold-400"
             >
               Every course →
             </Link>
@@ -364,7 +367,11 @@ async function HeroPanel({
   const showReal = enrolments.length > 0;
 
   return (
-    <Card variant="raised" pad="none" className="p-6">
+    // min-w-0 so this grid item can shrink below the min-content width of its
+    // course titles. Without it the track grows to fit the longest title and
+    // the whole page ends up wider than the screen — the titles truncate only
+    // once the item is allowed to be narrower than they are.
+    <Card variant="raised" pad="none" className="min-w-0 p-6">
       <div className="mb-[18px] flex flex-wrap items-center justify-between gap-2.5">
         <span className="text-[13px] font-bold text-mist-100">
           {showReal ? "Your progress" : "What your dashboard looks like"}

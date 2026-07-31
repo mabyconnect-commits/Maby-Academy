@@ -64,6 +64,12 @@ export const WORKSPACE_ROOT: Record<Workspace, string> = {
  * Admin lists several capabilities because the admin area is shared: a
  * moderator, a support agent and a finance manager each reach it for their own
  * queue and see nothing else.
+ *
+ * Every key here must be one that no ordinary member holds. `payment:view` was
+ * listed for the finance manager and is in `BASELINE` — it means "see my own
+ * invoices" on the billing page — so it offered an Admin workspace switcher to
+ * every student on the site. Finance is unlocked by `financial_report:export`
+ * instead, which only FINANCE, ADMIN and SUPER_ADMIN hold.
  */
 export const WORKSPACE_REQUIRES: Record<Workspace, PermissionKey[]> = {
   learn: [],
@@ -73,7 +79,7 @@ export const WORKSPACE_REQUIRES: Record<Workspace, PermissionKey[]> = {
     "course:approve",
     "report:review",
     "ticket:respond",
-    "payment:view",
+    "financial_report:export",
     "user:edit",
     "audit:view",
     "feature_flag:manage",
@@ -111,6 +117,14 @@ export const NAV: Record<Workspace, NavSection[]> = {
           short: "Tasks",
           icon: "edit",
           mobileOrder: 3,
+        },
+        {
+          // Directly above Certificates, because they answer the same
+          // question at different stages: how am I doing, and did I pass.
+          href: "/dashboard/scores",
+          label: "My scores",
+          short: "Scores",
+          icon: "chart",
         },
         {
           href: "/dashboard/certificates",
@@ -347,8 +361,11 @@ export const NAV: Record<Workspace, NavSection[]> = {
           href: "/admin/finance",
           label: "Finance",
           short: "Finance",
+          // Matches the page's own guard. It was `payment:view`, which every
+          // member holds for their own billing, so the row advertised a
+          // destination that redirects straight back out.
           icon: "wallet",
-          requires: "payment:view",
+          requires: "commission:approve",
           mobileOrder: 4,
         },
         {
@@ -372,6 +389,13 @@ export const NAV: Record<Workspace, NavSection[]> = {
           short: "Certs",
           icon: "award",
           requires: "certificate:issue_manual",
+        },
+        {
+          href: "/admin/seasons",
+          label: "Seasons & prizes",
+          short: "Seasons",
+          icon: "trophy",
+          requires: "settings:manage",
         },
       ],
     },

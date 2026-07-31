@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getLessonForViewer } from "@/server/services/courses";
 import { getQuizAttempts } from "@/server/services/assessment";
 import { Alert, Card, LinkButton, Pill, ProgressBar } from "@/components/ui";
+import { RichText } from "@/components/RichText";
 import { cn, formatDuration } from "@/lib/utils";
 import { CompleteLessonForm } from "./CompleteLessonForm";
 import { QuizForm } from "./QuizForm";
@@ -65,11 +66,16 @@ export default async function LessonPage({
     // makes the lesson start 64px left of the logo, which reads as a broken
     // layout rather than a deliberately wide reading column.
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="grid items-start gap-8 lg:grid-cols-[1fr_310px]">
+      {/* minmax(0,1fr) and min-w-0: a grid track sized `auto` or `1fr` takes
+          its minimum from the item's min-content, so the longest word in a
+          lesson body or outline sizes the column — and the column can then
+          exceed the page. Both children must be allowed to be narrower than
+          their content. */}
+      <div className="grid items-start gap-8 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_310px]">
         {/* ------------------------------------------------------------- */}
         {/* Lesson body                                                    */}
         {/* ------------------------------------------------------------- */}
-        <article>
+        <article className="min-w-0">
           <nav className="text-sm text-mist-400 mb-4" aria-label="Breadcrumb">
             <Link href={`/courses/${course.slug}`} className="hover:text-mist-200">
               ← {course.title}
@@ -122,26 +128,7 @@ export default async function LessonPage({
 
           {/* Written content ------------------------------------------ */}
           {lesson.content && (
-            <div className="mt-8 prose-lesson">
-              {lesson.content.split("\n\n").map((block, i) => {
-                if (block.startsWith("## ")) {
-                  return <h2 key={i}>{block.slice(3)}</h2>;
-                }
-                if (block.startsWith("### ")) {
-                  return <h3 key={i}>{block.slice(4)}</h3>;
-                }
-                if (block.startsWith("- ")) {
-                  return (
-                    <ul key={i} className="list-disc pl-5 space-y-1.5">
-                      {block.split("\n").map((li, j) => (
-                        <li key={j}>{li.replace(/^-\s*/, "")}</li>
-                      ))}
-                    </ul>
-                  );
-                }
-                return <p key={i}>{block}</p>;
-              })}
-            </div>
+            <RichText content={lesson.content} className="mt-8 prose-lesson" />
           )}
 
           {/* Resources ------------------------------------------------- */}
@@ -253,7 +240,7 @@ export default async function LessonPage({
         {/* ------------------------------------------------------------- */}
         {/* Course outline                                                 */}
         {/* ------------------------------------------------------------- */}
-        <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+        <aside className="min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
           <Card className="overflow-hidden p-0">
             <div className="border-b border-rule bg-ink-800/50 px-4 py-3.5">
               <p className="eyebrow">Course outline</p>

@@ -78,7 +78,7 @@ export default async function AdminCertificatesPage() {
               )}
               <Link
                 href={`/verify/${c.verifyToken}`}
-                className="text-[11px] font-semibold text-gold-500 hover:text-gold-400"
+                className="-my-2 inline-flex items-center py-2 text-[11px] font-semibold text-gold-500 hover:text-gold-400"
               >
                 Verify →
               </Link>

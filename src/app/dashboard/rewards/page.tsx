@@ -194,9 +194,15 @@ export default async function RewardsPage() {
         </div>
       </section>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      {/* minmax(0,1fr) rather than a bare `auto`/`1fr` track: an auto track
+          takes its floor from the item's min-content, and on a phone this one
+          resolved to 405px inside a 328px container — pushing the leaderboard
+          off the right of the screen. The explicit 0 minimum lets the track
+          stay inside the container and the rows truncate instead. `min-w-0` on
+          each section is the same fix one level down. */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         {/* Leaderboard --------------------------------------------------- */}
-        <section>
+        <section className="min-w-0">
           <SectionHeading
             title="Leaderboard"
             subtitle="Ranked by lifetime points."
@@ -246,7 +252,7 @@ export default async function RewardsPage() {
         </section>
 
         {/* Ledger -------------------------------------------------------- */}
-        <section>
+        <section className="min-w-0">
           <SectionHeading
             title="Points activity"
             subtitle="Every point you've earned, and what for."

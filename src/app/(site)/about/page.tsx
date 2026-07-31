@@ -1,135 +1,209 @@
 import type { Metadata } from "next";
-import { LinkButton, Card } from "@/components/ui";
+import { db } from "@/lib/db";
+import { Card, LinkButton } from "@/components/ui";
 import { Icon } from "@/components/Icon";
+import { Avatar } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Why Maby Academy teaches crypto, capital and character together — and the promises we enforce in the software, not just the footer.",
+    "Maby Academy is an accountability institution — Web3 and finance education joined to faith, health and discipline, with work that a real person grades.",
 };
 
-/**
- * The About page. Deliberately not a slick "our mission" brochure — it states
- * what the academy is, why the six pillars are taught together, and the
- * promises that are enforced in the product. The voice matches the founder's
- * bio and the landing page's "responsibility, in the product" section.
- */
-export default function AboutPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AboutPage() {
+  // Instructors are read from the database rather than hard-coded, so this page
+  // cannot advertise a teacher who has left.
+  const instructors = await db.user.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { role: { in: ["INSTRUCTOR", "ADMIN", "SUPER_ADMIN", "MENTOR"] } },
+        { taughtCourses: { some: { status: "PUBLISHED" } } },
+      ],
+    },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      name: true,
+      bio: true,
+      avatarUrl: true,
+      role: true,
+      _count: { select: { taughtCourses: { where: { status: "PUBLISHED" } } } },
+    },
+  });
+
+  const teaching = instructors.filter((i) => i._count.taughtCourses > 0);
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:py-20">
-      <p className="eyebrow-wide">About Maby Academy</p>
-      <h1 className="mt-4 text-[34px] leading-[1.1] font-black tracking-tight text-mist-100 sm:text-[44px]">
-        Crypto, capital and character —{" "}
-        <span className="font-display text-gold-500">in that order.</span>
-      </h1>
-      <p className="mt-5 text-base leading-[1.75] text-mist-300">
-        Most people lose money in crypto long before they place a bad trade —
-        to a phishing link, a screenshot of a seed phrase, an exchange that
-        never let them withdraw. Maby Academy exists because that is a teaching
-        failure, not a personal one. We build the foundation first: how to hold
-        your own money safely, think clearly, and stay whole while you grow.
-      </p>
+    <div className="mx-auto max-w-4xl px-4 py-14">
+      <header>
+        <p className="eyebrow">About</p>
+        <h1 className="mt-3 text-4xl leading-[1.1] font-semibold tracking-tight text-mist-100 sm:text-5xl">
+          Not a course catalogue. An accountability institution.
+        </h1>
+        <p className="mt-5 text-base leading-[1.75] text-mist-300">
+          Most crypto education is a video library with a progress bar. You watch,
+          the bar fills, and at the end you know roughly what you knew before —
+          except now you have a certificate saying otherwise.
+        </p>
+      </header>
 
-      <Section title="Why the pillars are taught together">
+      <div className="prose-lesson mt-10">
+        <h2>Three commitments</h2>
+
         <p>
-          Finance without character produces reckless traders. Skill without
-          health produces burnout. Ambition without wisdom produces people who
-          win a game that never made them happier. So the academy is built on
-          six pillars — Crypto Foundations, On-Chain Analysis, Trading &amp;
-          Risk, Money &amp; Business, Faith &amp; Purpose, and Health &amp;
-          Mindset — taught alongside each other rather than in isolation.
+          <strong>Completion is earned, not clicked.</strong> A lesson finishes
+          only when its condition is met — a watch threshold, a quiz passed, an
+          assignment submitted, or the exercise actually written up. Opening a
+          page has never completed a lesson here, and the course builder refuses
+          to publish a lesson with no condition at all. That single rule is what
+          makes a certificate worth showing anyone.
         </p>
+
         <p>
-          Faith and health are entirely optional, chosen by you during
-          onboarding and switchable off at any time. Nothing is preached. But
-          the door is open, because a life is more than a portfolio.
+          <strong>Growth is whole-person.</strong> Finance without character
+          produces reckless traders. Alongside the market work there is a Growth
+          Centre for habits, goals and reflection — private by default, and never
+          scored as a spiritual or medical judgement. Faith and health content is
+          opt-in during onboarding, and switching it off removes it immediately.
         </p>
-      </Section>
 
-      <Section title="Completion is earned, not clicked">
         <p>
-          Opening a page never completes a lesson. Every lesson is gated on a
-          real condition — a written reflection, a quiz, or an assignment a real
-          instructor grades against a published rubric. That single rule is the
-          entire reason a certificate from here means anything. We would rather
-          a smaller number of genuine completions than a large number of clicks.
+          <strong>Responsibility is structural.</strong> The risk disclosure, the
+          &ldquo;not financial advice&rdquo; line, taking no custody of funds, and
+          the absolute prohibition on ever collecting a seed phrase — these are
+          enforced in the software and repeated where they matter, not buried in a
+          footer nobody reads.
         </p>
-      </Section>
 
-      <Section title="What we promise, in the software">
-        <p className="mb-5">
-          These are not footer disclaimers. They are enforced in the product and
-          repeated wherever they matter.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card variant="gold" pad="wide">
-            <p className="eyebrow">Never</p>
-            <ul className="mt-3 space-y-2.5">
-              <Vow no>
-                Ask for your seed phrase, private key or recovery phrase — not
-                support, not an instructor, not the founder
-              </Vow>
-              <Vow no>Take custody of your funds, or execute a trade</Vow>
-              <Vow no>Tell you what to buy, or predict a price</Vow>
-              <Vow no>Let any role read your private journal</Vow>
-            </ul>
-          </Card>
-          <Card pad="wide">
-            <p className="eyebrow">Always</p>
-            <ul className="mt-3 space-y-2.5">
-              <Vow>Gate every lesson on a real condition</Vow>
-              <Vow>Have a person grade your assignments against a rubric</Vow>
-              <Vow>Make every certificate publicly verifiable by serial</Vow>
-              <Vow>State plainly that this is education, not financial advice</Vow>
-            </ul>
-          </Card>
-        </div>
-      </Section>
+        <h2>Who this is for</h2>
 
-      <Section title="Who teaches here">
         <p>
-          The academy is led by Mabi, its founder, alongside a small teaching
-          team: an on-chain analyst who spent years reading blocks before it was
-          a job title, a risk-first trader who survived three bear markets by
-          refusing to be a hero, and a health and mindset coach who believes
-          discipline is a form of self-respect. Courses are authored as prose
-          you can read in a diff, so the curriculum is reviewable, not a black
-          box.
+          People who want to understand markets rather than follow calls. Who would
+          rather check a claim themselves than believe a screenshot. Who suspect
+          that the discipline underneath the returns matters more than the returns,
+          and who want somewhere that treats it that way.
         </p>
-      </Section>
 
-      <div className="mt-14 flex flex-wrap gap-3">
-        <LinkButton href="/register" size="lg">
-          Start learning free
-        </LinkButton>
-        <LinkButton href="/courses" variant="secondary" size="lg">
-          Browse the courses
-        </LinkButton>
+        <p>
+          It is not for anyone looking for signals, guaranteed returns, or someone
+          to tell them what to buy. Nobody here will, at any price.
+        </p>
+
+        <h2>Where it came from</h2>
+
+        <p>
+          Maby Academy grew out of Maby Connect. The mark is an open ring — a
+          community that is not closed — cradling an <strong>M</strong> drawn as an
+          ascending path. Growth and connection in one figure. No graduation cap,
+          because a cap is about the day you finish and this is about what you can
+          do afterwards.
+        </p>
       </div>
+
+      {/* Instructors ------------------------------------------------------ */}
+      {teaching.length > 0 && (
+        <section className="mt-14 border-t border-rule pt-12">
+          <p className="eyebrow-wide">Who teaches here</p>
+          <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-mist-100">
+            The people who read your work
+          </h2>
+          <p className="mt-3 text-sm leading-[1.7] text-mist-400">
+            Assignments are graded by these people against a published rubric.
+            Not by a script, and not by an AI — which is a deliberate constraint,
+            because feedback you cannot argue with is not feedback.
+          </p>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {teaching.map((person) => (
+              <Card key={person.id} pad="wide">
+                <div className="flex items-start gap-3.5">
+                  <Avatar name={person.name} src={person.avatarUrl} size={44} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-mist-100">
+                      {person.name}
+                    </p>
+                    <p className="mt-0.5 text-[10px] font-semibold tracking-[0.1em] text-gold-500 uppercase">
+                      {person._count.taughtCourses === 1
+                        ? "1 course"
+                        : `${person._count.taughtCourses} courses`}
+                    </p>
+                    {person.bio && (
+                      <p className="mt-2 text-[11.5px] leading-[1.6] text-mist-400">
+                        {person.bio}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Honest limits ---------------------------------------------------- */}
+      <section className="mt-14 border-t border-rule pt-12">
+        <p className="eyebrow-wide">What we have not built yet</p>
+        <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-mist-100">
+          Stated, rather than implied
+        </h2>
+        <p className="mt-3 text-sm leading-[1.7] text-mist-400">
+          A young platform that pretends to be finished is the first thing you
+          should distrust. So here is the current honest position.
+        </p>
+
+        <Card pad="wide" className="mt-6">
+          <ul className="space-y-3">
+            <Limit>
+              Email delivery is not connected yet, so verification and reset
+              links are generated but not posted. Support handles account access
+              directly in the meantime.
+            </Limit>
+            <Limit>
+              Video hosting is not wired up. Lessons are written, and written
+              lessons carry their own exercises.
+            </Limit>
+            <Limit>
+              Referral commissions exist and are calculated, but stay switched off
+              behind a feature flag pending compliance review. Nothing pays out
+              until that review is done.
+            </Limit>
+            <Limit>
+              Organisation and team accounts are specified but not built.
+            </Limit>
+          </ul>
+        </Card>
+      </section>
+
+      <section className="mt-12">
+        <Card variant="gold" pad="wide" className="text-center">
+          <p className="eyebrow">Start where it matters</p>
+          <h2 className="mx-auto mt-3 max-w-lg text-xl leading-[1.3] font-extrabold text-mist-100">
+            Own your keys before you own anything else.
+          </h2>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <LinkButton href="/courses/crypto-from-zero" size="lg">
+              Open the free course
+            </LinkButton>
+            <LinkButton href="/faq" variant="secondary" size="lg">
+              Read the FAQ
+            </LinkButton>
+          </div>
+        </Card>
+      </section>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="mt-12 border-t border-rule pt-10">
-      <h2 className="text-xl font-extrabold tracking-tight text-mist-100 sm:text-2xl">
-        {title}
-      </h2>
-      <div className="mt-4 space-y-4 text-[15px] leading-[1.75] text-mist-300">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Vow({ no = false, children }: { no?: boolean; children: React.ReactNode }) {
+function Limit({ children }: { children: React.ReactNode }) {
   return (
     <li className="flex gap-2.5">
-      <span className={`mt-px shrink-0 ${no ? "text-flag-500" : "text-growth-500"}`}>
-        <Icon name={no ? "flag" : "check"} size={14} strokeWidth={2.5} />
+      <span className="mt-px shrink-0 text-ember-500">
+        <Icon name="flag" size={14} strokeWidth={2.5} />
       </span>
-      <span className="text-[12.5px] leading-[1.6] text-mist-300">{children}</span>
+      <span className="text-[12.5px] leading-[1.65] text-mist-300">{children}</span>
     </li>
   );
 }

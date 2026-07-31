@@ -112,6 +112,47 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
   const keptModuleIds: string[] = [];
   const keptLessonIds: string[] = [];
 
+  /**
+   * Park every existing module out of the way before assigning final positions.
+   *
+   * `Module` carries `@@unique([courseId, sortOrder])`, so writing the new
+   * ordering directly collides with whatever already occupies those slots —
+   * which happens whenever a slug is first created by the inline seed and then
+   * re-authored here with different module titles. Moving them into a high,
+   * disjoint range first means every subsequent write lands on a free slot.
+   *
+   * Negative numbers would work equally well; a high offset is used so a row
+   * left behind by an interrupted run is obvious rather than looking like a
+   * legitimate first module.
+   */
+  const existingModules = await db.module.findMany({
+    where: { courseId: row.id },
+    select: { id: true, sortOrder: true },
+    orderBy: { sortOrder: "asc" },
+  });
+
+  /**
+   * Park each module at a position above every position currently in use.
+   *
+   * A fixed offset is not safe: an earlier interrupted run can leave rows
+   * already parked at that offset, and the update then collides with them. By
+   * deriving the range from the current maximum and walking rows in ascending
+   * order, every write lands somewhere provably free — the constraint is
+   * checked per statement, not at commit, so transient collisions matter.
+   */
+  const maxSort = existingModules.reduce((m, x) => Math.max(m, x.sortOrder), -1);
+  // Also clear the positions the *new* content is about to occupy. Parking
+  // only above the old maximum leaves parked rows sitting inside the incoming
+  // range whenever a course gains modules — a two-module course re-authored
+  // with four parks at 2 and 3, and then the new module 2 collides.
+  const parkBase = Math.max(maxSort, course.modules.length - 1) + 1;
+  for (const [i, m] of existingModules.entries()) {
+    await db.module.update({
+      where: { id: m.id },
+      data: { sortOrder: parkBase + i },
+    });
+  }
+
   for (const [moduleIndex, module] of course.modules.entries()) {
     const existingModule = await db.module.findFirst({
       where: { courseId: row.id, title: module.title },
@@ -237,6 +278,19 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
       // ---- Assignment -------------------------------------------------
       if (lesson.assignment) {
         const a = lesson.assignment;
+        // The authoring type reads better as criterion/weight/descriptor, but
+        // every consumer — the grading form, the student's scores page, the
+        // authoring UI — expects name/maxPoints/description. Storing the
+        // authoring shape verbatim gave graders a rubric with blank criterion
+        // names, scores keyed under "undefined", and a derived total stuck at
+        // zero on all of the authored courses. Normalise on the way in, so
+        // there is exactly one rubric shape in the database.
+        const rubric = a.rubric.map((c) => ({
+          name: c.criterion,
+          maxPoints: c.weight,
+          description: c.descriptor,
+        }));
+
         await db.assignment.upsert({
           where: { lessonId: lessonRow.id },
           create: {
@@ -245,7 +299,7 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
             instructions: a.instructions,
             maxScore: a.maxScore,
             passScore: a.passScore,
-            rubric: a.rubric,
+            rubric,
             pointsValue: lesson.points ?? 25,
           },
           update: {
@@ -253,7 +307,7 @@ export async function loadCourse(db: PrismaClient, course: ContentCourse) {
             instructions: a.instructions,
             maxScore: a.maxScore,
             passScore: a.passScore,
-            rubric: a.rubric,
+            rubric,
           },
         });
       }

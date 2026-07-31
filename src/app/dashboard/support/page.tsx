@@ -18,7 +18,7 @@ export default async function SupportPage() {
   const tickets = await listMyTickets(user.id);
 
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="grid items-start gap-5 grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_360px]">
       <div className="flex flex-col gap-5">
         <Card pad="none" className="overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-rule px-4 py-5 sm:px-[22px]">

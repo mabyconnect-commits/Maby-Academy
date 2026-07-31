@@ -113,7 +113,7 @@ const AUTHORS: {
 }[] = [
   {
     email: "mabi@mabyacademy.com",
-    name: "Mabi",
+    name: "Maby",
     role: "ADMIN",
     referralCode: "MABY0001",
     bio: "Founder of Maby Academy. Teaching crypto, capital and character — in that order of urgency, never in that order of importance.",
@@ -182,12 +182,117 @@ async function ensureAuthors() {
   console.log(`  ✓ ${AUTHORS.length} author accounts`);
 }
 
+
+/**
+ * The community rooms.
+ *
+ * Deliberately few. A forum with twenty empty rooms reads as abandoned, while
+ * one busy room reads as alive — so this opens the academy-wide room plus one
+ * per pillar, and lets course rooms come later when a course has enough members
+ * to sustain a conversation.
+ *
+ * Guidelines are stored per room rather than linked to a policy page, because a
+ * rule nobody reads is a rule nobody follows, and the seed-phrase rule is the
+ * one that costs real money when it is missed.
+ */
+const HOUSE_RULES = [
+  "Be useful or be quiet. A confident wrong answer costs someone money here.",
+  "Never post or request a seed phrase, private key or recovery phrase. Anyone who asks is not from this academy — report them.",
+  "No price calls, no shilling, no referral links. Explain your reasoning or don't post the conclusion.",
+  "Disagree with the argument, not the person. Say \"I was wrong\" when you were.",
+].join("\n");
+
+const ROOMS: {
+  slug: string;
+  name: string;
+  description: string;
+  categorySlug?: string;
+}[] = [
+  {
+    slug: "the-commons",
+    name: "The Commons",
+    description:
+      "The academy-wide room. Introductions, wins, questions and accountability. Start here if you are not sure where something belongs.",
+  },
+  {
+    slug: "crypto-and-web3",
+    name: "Crypto & Web3",
+    description:
+      "Wallets, self-custody, chains and the things that actually go wrong. Bring the transaction hash, not the screenshot.",
+    categorySlug: "crypto-foundations",
+  },
+  {
+    slug: "on-chain-research",
+    name: "On-Chain Research",
+    description:
+      "Show your working. Post the address, the query and what you concluded — and let people check it.",
+    categorySlug: "on-chain-analysis",
+  },
+  {
+    slug: "risk-and-markets",
+    name: "Risk & Markets",
+    description:
+      "Position sizing, journals and post-mortems. Losses discussed openly are worth more here than wins announced.",
+    categorySlug: "trading-and-risk",
+  },
+  {
+    slug: "money-and-building",
+    name: "Money & Building",
+    description:
+      "Budgets, income, pricing and the unglamorous mechanics of building something that survives a bad year.",
+    categorySlug: "money-and-business",
+  },
+  {
+    slug: "faith-and-purpose",
+    name: "Faith & Purpose",
+    description:
+      "Character, stewardship and contentment. Optional, and never a condition of belonging anywhere else in the academy.",
+    categorySlug: "faith-and-purpose",
+  },
+  {
+    slug: "health-and-mindset",
+    name: "Health & Mindset",
+    description:
+      "Sleep, focus, training and emotional control — the body and mind that have to carry everything else.",
+    categorySlug: "health-and-mindset",
+  },
+];
+
+async function ensureCommunities() {
+  for (const [i, room] of ROOMS.entries()) {
+    // A pillar room is linked to nothing in the schema — `courseId` ties a room
+    // to one course, and a pillar spans several — so the association stays
+    // descriptive. Linking to an arbitrary course would make the room vanish if
+    // that course were ever archived.
+    await db.community.upsert({
+      where: { slug: room.slug },
+      create: {
+        slug: room.slug,
+        name: room.name,
+        description: room.description,
+        scope: "ACADEMY",
+        isPublic: true,
+        guidelines: HOUSE_RULES,
+      },
+      // Refreshes copy on re-run without touching posts or membership.
+      update: {
+        name: room.name,
+        description: room.description,
+        guidelines: HOUSE_RULES,
+      },
+    });
+    void i;
+  }
+  console.log(`  ✓ ${ROOMS.length} community rooms`);
+}
+
 async function main() {
   console.log("→ Publishing authored courses…");
   await ensureCategories();
   await ensureAuthors();
   await loadCourses(db, AUTHORED_COURSES);
-  console.log(`✓ Published ${AUTHORED_COURSES.length} courses.`);
+  await ensureCommunities();
+  console.log(`✓ Published ${AUTHORED_COURSES.length} courses and ${ROOMS.length} rooms.`);
 }
 
 main()

@@ -101,7 +101,7 @@ export function CourseCard({
         {course.instructor && (
           <>
             <span aria-hidden>·</span>
-            <span className="truncate">{course.instructor.name}</span>
+            <span className="min-w-0 truncate">{course.instructor.name}</span>
           </>
         )}
       </div>
