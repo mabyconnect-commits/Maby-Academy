@@ -52,4 +52,11 @@ export const COMMUNITIES: Community[] = [
     url: "https://t.me/+IMPPY91eYAk1NTdk",
     blurb: "The lounge — the wider Telegram room for members.",
   },
+  {
+    name: "Maby Connect",
+    platform: "Telegram",
+    kind: "Channel",
+    url: "https://t.me/Mabyconnect2022",
+    blurb: "The Maby Connect channel — updates, drops and what's next.",
+  },
 ];
