@@ -1,34 +1,37 @@
 import type { Metadata } from "next";
 import { guardPermission } from "@/lib/auth/guard";
-import { listUpcomingSessions, listPastSessions } from "@/server/services/liveSessions";
-import { Avatar, Card, EmptyState, Pill, StatusPill } from "@/components/ui";
+import {
+  listPastSessions,
+  listSchedulableCourses,
+  listUpcomingSessions,
+} from "@/server/services/liveSessions";
+import { Avatar, Card, Pill, StatusPill } from "@/components/ui";
 import { formatDate, pluralize } from "@/lib/utils";
+import { CancelSessionButton, ScheduleSessionForm } from "./ScheduleSessionForm";
 
 export const metadata: Metadata = { title: "Live sessions" };
 export const dynamic = "force-dynamic";
 
 export default async function TeachSessionsPage() {
   const user = await guardPermission("course:create", "Live sessions");
-  const [upcoming, past] = await Promise.all([
+  const actor = { id: user.id, role: user.role, extraRoles: user.extraRoles };
+  const [upcoming, past, courses] = await Promise.all([
     listUpcomingSessions(),
     listPastSessions(),
+    listSchedulableCourses(actor),
   ]);
-
-  if (upcoming.length === 0 && past.length === 0) {
-    return (
-      <EmptyState
-        icon="calendar"
-        title="No sessions scheduled"
-        description="Live sessions are created by an administrator and appear here once scheduled, with attendance and RSVP counts."
-      />
-    );
-  }
 
   return (
     <div className="flex flex-col gap-5">
-      {upcoming.length > 0 && (
-        <section>
-          <h2 className="eyebrow mb-3">Upcoming</h2>
+      <ScheduleSessionForm courses={courses} />
+
+      <section>
+        <h2 className="eyebrow mb-3">Upcoming</h2>
+        {upcoming.length === 0 ? (
+          <p className="text-sm text-mist-400">
+            Nothing scheduled yet. Use the form above to book the first one.
+          </p>
+        ) : (
           <div className="flex flex-col gap-2.5">
             {upcoming.map((s) => (
               <Card key={s.id}>
@@ -45,21 +48,24 @@ export default async function TeachSessionsPage() {
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2.5">
-                    <Pill tone="info">
-                      {pluralize(s._count.rsvps, "signup")}
-                    </Pill>
+                    <Pill tone="info">{pluralize(s._count.rsvps, "signup")}</Pill>
                     <StatusPill status={s.status} />
                   </div>
                 </div>
-                <div className="mt-3 flex items-center gap-2 text-[10.5px] text-mist-400">
-                  <Avatar name={s.host.name} src={s.host.avatarUrl} size={20} />
-                  Hosted by {s.host.name}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-[10.5px] text-mist-400">
+                    <Avatar name={s.host.name} src={s.host.avatarUrl} size={20} />
+                    Hosted by {s.host.name}
+                  </div>
+                  {s.hostId === user.id && (
+                    <CancelSessionButton sessionId={s.id} />
+                  )}
                 </div>
               </Card>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {past.length > 0 && (
         <section>
