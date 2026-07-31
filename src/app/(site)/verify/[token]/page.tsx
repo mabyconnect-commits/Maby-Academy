@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { verifyCertificate } from "@/server/services/certificates";
 import { Card, LinkButton, Pill } from "@/components/ui";
 import { Certificate } from "@/components/Certificate";
+import { PrintButton } from "@/components/PrintButton";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Certificate verification" };
@@ -102,9 +103,19 @@ export default async function VerifyTokenPage({
         {new Date().toISOString().replace("T", " ").slice(0, 16)} UTC.
       </p>
 
-      <LinkButton href="/courses" className="mt-7">
-        Explore the curriculum
-      </LinkButton>
+      {!revoked && (
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <PrintButton>Download / Save as PDF</PrintButton>
+          <LinkButton href="/courses" variant="secondary">
+            Explore the curriculum
+          </LinkButton>
+        </div>
+      )}
+      {revoked && (
+        <LinkButton href="/courses" className="mt-7">
+          Explore the curriculum
+        </LinkButton>
+      )}
     </Shell>
   );
 }

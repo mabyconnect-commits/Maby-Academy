@@ -192,7 +192,11 @@ export default async function LessonPage({
           )}
 
           {/* Completion + navigation ----------------------------------- */}
-          {enrollment && (
+          {/* An assignment lesson completes when the tutor grades a pass, not
+              on a click — so the manual complete control is shown only where
+              there is no assignment. The AssignmentForm above carries the
+              submission status in the meantime. */}
+          {enrollment && !lesson.assignment && (
             <div className="mt-10 border-t border-rule pt-6">
               <CompleteLessonForm
                 lessonId={lesson.id}

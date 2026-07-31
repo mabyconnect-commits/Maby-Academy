@@ -356,3 +356,12 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Printing a certificate: the verify page is the printable sheet. Hide the
+   interactive controls so a saved PDF shows only the certificate and its
+   verification details. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
