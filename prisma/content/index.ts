@@ -17,6 +17,7 @@ import { tokenomics } from "./tokenomics";
 import { buildTheBusiness } from "./build-the-business";
 import { leadingOthers } from "./leading-others";
 import { deepFocus } from "./deep-focus";
+import { queryTheChain } from "./query-the-chain";
 
 /**
  * The authored curriculum.
@@ -45,6 +46,7 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   buildTheBusiness,
   leadingOthers,
   deepFocus,
+  queryTheChain,
 ];
 
 export { loadCourse, loadCourses } from "./load";
