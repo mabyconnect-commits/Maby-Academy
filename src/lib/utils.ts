@@ -62,6 +62,19 @@ export function pluralize(n: number, singular: string, plural?: string) {
 }
 
 /**
+ * First name plus last initial — "Matthew Adeleye" → "Matthew A." Used where a
+ * member is shown to other members (the activity feed) so there's a friendly
+ * name without publishing everyone's full name.
+ */
+export function shortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Someone";
+  if (parts.length === 1) return parts[0];
+  const last = parts[parts.length - 1];
+  return `${parts[0]} ${last[0].toUpperCase()}.`;
+}
+
+/**
  * Fisher–Yates shuffle, returning a new array (never mutates the input).
  *
  * Used to randomise quiz option order per view, so the correct answer's

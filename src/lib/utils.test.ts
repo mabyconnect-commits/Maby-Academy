@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { formatMoney, shuffle } from "./utils";
+import { formatMoney, shortName, shuffle } from "./utils";
+
+describe("shortName", () => {
+  it("returns first name plus last initial", () => {
+    expect(shortName("Matthew Adeleye")).toBe("Matthew A.");
+    expect(shortName("grace okon udo")).toBe("grace U.");
+  });
+
+  it("returns a single name unchanged", () => {
+    expect(shortName("Matthew")).toBe("Matthew");
+  });
+
+  it("handles empty input gracefully", () => {
+    expect(shortName("   ")).toBe("Someone");
+  });
+});
 
 describe("formatMoney", () => {
   it("formats a valid currency normally", () => {

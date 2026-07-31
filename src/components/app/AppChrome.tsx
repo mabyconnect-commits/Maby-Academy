@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth/session";
-import { countUnread } from "@/server/services/notifications";
+import { countUnread, listNotifications } from "@/server/services/notifications";
 import { permissionsFor } from "@/lib/auth/permissions";
 import { levelFor } from "@/lib/levels";
 import { Sidebar } from "./Sidebar";
@@ -64,7 +64,10 @@ export async function AppChrome({
     return needs.length === 0 || needs.some((p) => granted.has(p));
   });
 
-  const unread = await countUnread(user.id);
+  const [unread, recentNotifications] = await Promise.all([
+    countUnread(user.id),
+    listNotifications(user.id, 6),
+  ]);
 
   const mobileItems: NavItem[] = sections
     .flatMap((s) => s.items)
@@ -96,6 +99,8 @@ export async function AppChrome({
             roleLabel: user.role.replace(/_/g, " ").toLowerCase(),
             avatarUrl: user.avatarUrl,
           }}
+          notifications={recentNotifications}
+          unread={unread}
         />
         {/* Bottom padding clears the mobile bar so the last card on a page is
             never trapped underneath it. Unpadded pages still need it, so it

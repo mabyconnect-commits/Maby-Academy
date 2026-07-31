@@ -16,6 +16,12 @@ import {
 } from "@/components/ui";
 import { Icon } from "@/components/Icon";
 import { formatDate, pluralize } from "@/lib/utils";
+import {
+  COMMENT_POINTS,
+  DAILY_COMMUNITY_POINT_CAP,
+  POST_POINTS,
+} from "@/server/services/community";
+import { CommunityPromo } from "./CommunityPromo";
 
 export const metadata: Metadata = { title: "Overview" };
 export const dynamic = "force-dynamic";
@@ -74,6 +80,16 @@ export default async function DashboardPage() {
               Join &amp; unlock
             </LinkButton>
           </Card>
+        )}
+
+        {/* Community participation nudge — only once they're in, so it doesn't
+            compete with the join gate above. Dismissible. */}
+        {user.communitiesJoinedAt && (
+          <CommunityPromo
+            postPoints={POST_POINTS}
+            commentPoints={COMMENT_POINTS}
+            dailyCap={DAILY_COMMUNITY_POINT_CAP}
+          />
         )}
 
         {/* Resume ------------------------------------------------------ */}

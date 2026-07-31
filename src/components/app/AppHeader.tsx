@@ -6,6 +6,7 @@ import { Icon } from "@/components/Icon";
 import { LogoMark } from "@/components/Brand";
 import { StreakPill, XpPill } from "@/components/ui";
 import { AccountMenu } from "./AccountMenu";
+import { NotificationBell, type BellNotification } from "./NotificationBell";
 import { titleFor, type Workspace } from "./nav-config";
 
 /**
@@ -23,6 +24,8 @@ export function AppHeader({
   level,
   showPills,
   user,
+  notifications,
+  unread,
 }: {
   workspace: Workspace;
   streak: number;
@@ -31,6 +34,8 @@ export function AppHeader({
   /** Only the learner workspace carries progress pills. */
   showPills: boolean;
   user: { name: string; roleLabel: string; avatarUrl: string | null };
+  notifications: BellNotification[];
+  unread: number;
 }) {
   const pathname = usePathname();
   const title = titleFor(workspace, pathname);
@@ -66,6 +71,7 @@ export function AppHeader({
         >
           <Icon name="search" size={17} />
         </Link>
+        <NotificationBell notifications={notifications} unread={unread} />
         {/* Phones only — on desktop the account row lives in the sidebar
             footer. Without this there was no way to sign out on mobile. */}
         <AccountMenu
