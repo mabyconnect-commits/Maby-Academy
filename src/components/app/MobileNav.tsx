@@ -20,7 +20,7 @@ export function MobileNav({ items, unread }: { items: NavItem[]; unread: number 
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto border-t border-mist-100/10 bg-ink-870/97 px-1.5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-[10px] lg:hidden"
+      className="no-print fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto border-t border-mist-100/10 bg-ink-870/97 px-1.5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-[10px] lg:hidden"
     >
       {items.map((item) => {
         const active = isActive(item, pathname);

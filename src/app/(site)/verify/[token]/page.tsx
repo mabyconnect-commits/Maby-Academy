@@ -104,7 +104,7 @@ export default async function VerifyTokenPage({
       </p>
 
       {!revoked && (
-        <div className="mt-7 flex flex-wrap justify-center gap-3">
+        <div className="no-print mt-7 flex flex-wrap justify-center gap-3">
           <PrintButton>Download / Save as PDF</PrintButton>
           <LinkButton href="/courses" variant="secondary">
             Explore the curriculum
@@ -112,7 +112,7 @@ export default async function VerifyTokenPage({
         </div>
       )}
       {revoked && (
-        <LinkButton href="/courses" className="mt-7">
+        <LinkButton href="/courses" className="no-print mt-7">
           Explore the curriculum
         </LinkButton>
       )}

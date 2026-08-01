@@ -35,7 +35,7 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gold-500/15 bg-ink-950/92 backdrop-blur-lg">
+    <header className="no-print sticky top-0 z-40 border-b border-gold-500/15 bg-ink-950/92 backdrop-blur-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3.5 px-4 py-4 sm:px-6">
         <Link
           href="/"

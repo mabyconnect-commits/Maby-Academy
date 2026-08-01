@@ -41,7 +41,7 @@ export function AppHeader({
   const title = titleFor(workspace, pathname);
 
   return (
-    <header className="sticky top-0 z-[5] flex items-center justify-between gap-2.5 border-b border-rule bg-ink-950/92 px-4 py-3.5 backdrop-blur-lg sm:px-6 lg:px-8 lg:py-[18px]">
+    <header className="no-print sticky top-0 z-[5] flex items-center justify-between gap-2.5 border-b border-rule bg-ink-950/92 px-4 py-3.5 backdrop-blur-lg sm:px-6 lg:px-8 lg:py-[18px]">
       <div className="flex min-w-0 items-center gap-3">
         {/* The mark stands in for the sidebar logo on phones, where the
             sidebar isn't rendered at all. */}
