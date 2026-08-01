@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { verifyCertificate } from "@/server/services/certificates";
-import { Card, LinkButton, Pill } from "@/components/ui";
+import { buttonClass, Card, LinkButton, Pill } from "@/components/ui";
 import { Certificate } from "@/components/Certificate";
 import { PrintButton } from "@/components/PrintButton";
 import { AutoPrint } from "./AutoPrint";
@@ -69,7 +69,10 @@ export default async function VerifyTokenPage({
         </p>
       )}
 
-      <div className="mt-8 text-left">
+      {/* break-inside-avoid: in a printed PDF, keep the certificate whole and
+          keep the details block whole, so the details start cleanly on the
+          next page rather than splitting across the page break. */}
+      <div className="mt-8 text-left [break-inside:avoid]">
         <Certificate
           recipientName={certificate.user.name}
           courseTitle={certificate.course.title}
@@ -80,7 +83,7 @@ export default async function VerifyTokenPage({
         />
       </div>
 
-      <Card className="mt-6 text-left">
+      <Card className="mt-6 text-left [break-inside:avoid]">
         <dl className="space-y-3 text-sm">
           <Row label="Serial number" value={certificate.serial} mono />
           <Row label="Issued" value={formatDate(certificate.issuedAt)} />
@@ -111,6 +114,13 @@ export default async function VerifyTokenPage({
       {!revoked && (
         <div className="no-print mt-7 flex flex-wrap justify-center gap-3">
           <PrintButton>Download / Save as PDF</PrintButton>
+          <a
+            href={`/verify/${token}/image`}
+            download={`maby-certificate-${certificate.serial}.png`}
+            className={buttonClass("secondary")}
+          >
+            🖼 Download as image
+          </a>
           <LinkButton href="/courses" variant="secondary">
             Explore the curriculum
           </LinkButton>

@@ -5,7 +5,7 @@ import {
   getPendingCertificates,
   verifyUrl,
 } from "@/server/services/certificates";
-import { Card, EmptyState, LinkButton, Pill } from "@/components/ui";
+import { buttonClass, Card, EmptyState, LinkButton, Pill } from "@/components/ui";
 import { Certificate } from "@/components/Certificate";
 import { pluralize } from "@/lib/utils";
 import { CopyButton } from "@/components/CopyButton";
@@ -92,6 +92,13 @@ export default async function CertificatesPage() {
                   >
                     ⬇ Download certificate
                   </LinkButton>
+                  <a
+                    href={`/verify/${cert.verifyToken}/image`}
+                    download={`maby-certificate-${cert.serial}.png`}
+                    className={buttonClass("secondary")}
+                  >
+                    🖼 Download as image
+                  </a>
                   <LinkButton
                     href={`/verify/${cert.verifyToken}`}
                     variant="secondary"
@@ -101,8 +108,8 @@ export default async function CertificatesPage() {
                   <CopyButton value={url} label="Copy verify link" />
                 </div>
                 <p className="mt-2 text-xs text-mist-400">
-                  Opens a clean copy and your device&apos;s save dialog — choose
-                  &ldquo;Save as PDF&rdquo; to download.
+                  PDF opens a clean copy and your save dialog. Image gives you
+                  the certificate on its own — perfect for sharing.
                 </p>
               </div>
             );
