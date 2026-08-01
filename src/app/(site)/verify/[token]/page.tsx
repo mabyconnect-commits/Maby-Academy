@@ -3,6 +3,7 @@ import { verifyCertificate } from "@/server/services/certificates";
 import { Card, LinkButton, Pill } from "@/components/ui";
 import { Certificate } from "@/components/Certificate";
 import { PrintButton } from "@/components/PrintButton";
+import { AutoPrint } from "./AutoPrint";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Certificate verification" };
@@ -10,10 +11,13 @@ export const dynamic = "force-dynamic";
 
 export default async function VerifyTokenPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ print?: string }>;
 }) {
   const { token } = await params;
+  const { print } = await searchParams;
   const result = await verifyCertificate(token);
 
   if (result.status === "not_found") {
@@ -42,6 +46,7 @@ export default async function VerifyTokenPage({
 
   return (
     <Shell>
+      {print && !revoked && <AutoPrint />}
       <div className="text-5xl mb-4" aria-hidden>
         {revoked ? "⚠" : "🎓"}
       </div>

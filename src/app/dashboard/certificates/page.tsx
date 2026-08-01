@@ -85,11 +85,25 @@ export default async function CertificatesPage() {
                 />
 
                 <div className="mt-4 flex flex-wrap gap-3">
-                  <LinkButton href={`/verify/${cert.verifyToken}`}>
-                    View &amp; download
+                  <LinkButton
+                    href={`/verify/${cert.verifyToken}?print=1`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    ⬇ Download certificate
+                  </LinkButton>
+                  <LinkButton
+                    href={`/verify/${cert.verifyToken}`}
+                    variant="secondary"
+                  >
+                    View public record
                   </LinkButton>
                   <CopyButton value={url} label="Copy verify link" />
                 </div>
+                <p className="mt-2 text-xs text-mist-400">
+                  Opens a clean copy and your device&apos;s save dialog — choose
+                  &ldquo;Save as PDF&rdquo; to download.
+                </p>
               </div>
             );
           })}
