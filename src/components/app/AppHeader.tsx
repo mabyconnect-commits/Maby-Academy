@@ -41,7 +41,7 @@ export function AppHeader({
   const title = titleFor(workspace, pathname);
 
   return (
-    <header className="sticky top-0 z-[5] flex flex-wrap items-center justify-between gap-2.5 border-b border-rule bg-ink-950/92 px-4 py-3.5 backdrop-blur-lg sm:px-6 lg:px-8 lg:py-[18px]">
+    <header className="sticky top-0 z-[5] flex items-center justify-between gap-2.5 border-b border-rule bg-ink-950/92 px-4 py-3.5 backdrop-blur-lg sm:px-6 lg:px-8 lg:py-[18px]">
       <div className="flex min-w-0 items-center gap-3">
         {/* The mark stands in for the sidebar logo on phones, where the
             sidebar isn't rendered at all. */}
@@ -57,12 +57,16 @@ export function AppHeader({
         </h1>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* shrink-0 so the icons never compress or wrap; the title truncates
+          instead. The progress pills are the widest items and the least
+          essential in the bar (they headline the Rewards page), so they drop
+          away on the narrowest screens to keep the icons evenly spaced. */}
+      <div className="flex shrink-0 items-center gap-2">
         {showPills && (
-          <>
+          <div className="hidden items-center gap-2 min-[420px]:flex">
             <StreakPill days={streak} />
             <XpPill points={points} level={level} />
-          </>
+          </div>
         )}
         <Link
           href="/dashboard/search"
