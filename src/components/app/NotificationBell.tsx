@@ -88,7 +88,11 @@ export function NotificationBell({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-[var(--radius-card)] border border-rule-strong bg-ink-900 shadow-xl">
+        // On a phone the panel is pinned to the viewport (inset-x-3) so it can
+        // never spill off an edge; from `sm` up it becomes a 320px dropdown
+        // anchored under the bell. Anchoring the wide panel to the bell with
+        // right-0 was what pushed it off the left edge on mobile.
+        <div className="fixed inset-x-3 top-16 z-30 overflow-hidden rounded-[var(--radius-card)] border border-rule-strong bg-ink-900 shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80">
           <div className="flex items-center justify-between border-b border-rule px-4 py-3">
             <p className="text-sm font-semibold text-mist-100">Notifications</p>
             {unread > 0 && (
