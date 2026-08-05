@@ -27,6 +27,7 @@ export type SessionUser = Pick<
   | "currentStreak"
   | "emailVerifiedAt"
   | "timezone"
+  | "communitiesJoinedAt"
 > & {
   /** Secondary roles, e.g. a student who also mentors. */
   extraRoles: Role[];
@@ -44,6 +45,7 @@ const SESSION_SELECT = {
   currentStreak: true,
   emailVerifiedAt: true,
   timezone: true,
+  communitiesJoinedAt: true,
 } as const;
 
 export async function createSession(
