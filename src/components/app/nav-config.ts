@@ -264,6 +264,14 @@ export const NAV: Record<Workspace, NavSection[]> = {
           mobileOrder: 3,
         },
         {
+          href: "/teach/learners",
+          label: "Learners",
+          short: "People",
+          icon: "users",
+          requires: "submission:grade",
+          mobileOrder: 4,
+        },
+        {
           href: "/teach/sessions",
           label: "Live sessions",
           short: "Live",
@@ -272,7 +280,7 @@ export const NAV: Record<Workspace, NavSection[]> = {
           // capability. `mentor_session:manage` is a *mentor* permission and
           // gated instructors out of their own sessions page entirely.
           requires: "course:create",
-          mobileOrder: 4,
+          mobileOrder: 5,
         },
         {
           href: "/teach/analytics",
@@ -280,7 +288,7 @@ export const NAV: Record<Workspace, NavSection[]> = {
           short: "Stats",
           icon: "chart",
           requires: "course:create",
-          mobileOrder: 5,
+          mobileOrder: 6,
         },
       ],
     },

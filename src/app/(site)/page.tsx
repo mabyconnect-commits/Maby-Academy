@@ -228,9 +228,13 @@ export default async function HomePage() {
         <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-mist-100 sm:text-[32px]">
           Responsibility, in the product
         </h2>
+        {/* This line introduces the two cards below it. It used to describe how
+            the promises were built rather than what they say, which told a
+            first-time reader nothing about what they were looking at. */}
         <p className="mt-3 max-w-2xl text-sm leading-[1.7] text-mist-400">
-          Not footer disclaimers. These are enforced in the software and repeated
-          wherever they matter.
+          Two lists. The first is what nobody here will ever do — not support,
+          not an instructor, not the founder. The second is what happens every
+          time, whether or not you ask for it.
         </p>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-2">

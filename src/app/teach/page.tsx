@@ -72,7 +72,15 @@ export default async function TeachOverviewPage() {
       <Card pad="wide">
         <PanelHead
           title="Your courses"
-          action={<CardLink href="/teach/courses">Course builder →</CardLink>}
+          // Two destinations, because the courses and the people on them are
+          // different jobs: the builder is for the material, the roster is for
+          // whoever has stopped moving through it.
+          action={
+            <span className="flex items-center gap-3">
+              <CardLink href="/teach/learners">Learners →</CardLink>
+              <CardLink href="/teach/courses">Course builder →</CardLink>
+            </span>
+          }
         />
 
         {courses.length === 0 ? (

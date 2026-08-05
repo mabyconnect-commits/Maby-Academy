@@ -112,26 +112,60 @@ export async function saveSubmission(params: {
 }
 
 /** Queue of work awaiting review, scoped to what this grader may see. */
-export async function getGradingQueue(grader: {
-  id: string;
-  role: string;
-}) {
+export async function getGradingQueue(
+  grader: {
+    id: string;
+    role: string;
+  },
+  /**
+   * Optional narrowing for the queue page. A grader carrying twenty courses
+   * gets one flat list otherwise, and "oldest first" stops being useful the
+   * moment the list is longer than a screen.
+   */
+  options: { courseId?: string; query?: string } = {},
+) {
   // SUPER_ADMIN must be included: scoping a super admin to courses they
   // personally authored hid the whole queue from the one role that is meant to
   // see all of it.
-  const courseFilter =
+  const ownedByGrader =
     grader.role === "ADMIN" || grader.role === "SUPER_ADMIN"
       ? {}
-      : {
-          assignment: {
-            lesson: { module: { course: { instructorId: grader.id } } },
-          },
-        };
+      : { instructorId: grader.id };
+
+  const courseId = options.courseId?.trim();
+  const search = options.query?.trim();
 
   return db.submission.findMany({
     where: {
       status: { in: ["SUBMITTED", "UNDER_REVIEW"] },
-      ...courseFilter,
+      // Both the ownership scope and the chosen course narrow the same
+      // relation, so they are combined into one filter rather than spread as
+      // two `assignment` keys — the second would have overwritten the first
+      // and handed an instructor the whole platform's queue.
+      ...(Object.keys(ownedByGrader).length > 0 || courseId
+        ? {
+            assignment: {
+              lesson: {
+                module: {
+                  course: {
+                    ...ownedByGrader,
+                    ...(courseId ? { id: courseId } : {}),
+                  },
+                },
+              },
+            },
+          }
+        : {}),
+      ...(search
+        ? {
+            student: {
+              OR: [
+                { name: { contains: search, mode: "insensitive" as const } },
+                { email: { contains: search, mode: "insensitive" as const } },
+              ],
+            },
+          }
+        : {}),
     },
     orderBy: { submittedAt: "asc" },
     include: {
