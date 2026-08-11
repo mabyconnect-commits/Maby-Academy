@@ -66,6 +66,7 @@ export async function trackLessonProgress(params: {
       videoDuration: true,
       minWatchPercent: true,
       minReflectionChars: true,
+      assignment: { select: { id: true } },
       module: { select: { courseId: true, course: { select: { slug: true } } } },
     },
   });
@@ -90,6 +91,17 @@ export async function trackLessonProgress(params: {
 
     const wasCompleted = existing?.isCompleted ?? false;
     const requested = params.completed ?? wasCompleted;
+
+    // A lesson with an assignment is completed by grading, not by a click —
+    // gradeSubmission marks it complete when the work passes. This keeps the
+    // certificate a record of graded work rather than of self-attestation.
+    // (A watch-progress ping carries completed=false and is unaffected.)
+    if (requested && !wasCompleted && lesson.assignment) {
+      throw new ServiceError(
+        "This lesson completes when your assignment is graded and passed. Submit your work — your tutor takes it from there.",
+        400,
+      );
+    }
 
     // Watch position only ever moves forward — scrubbing back shouldn't
     // discard how far the student has actually watched.

@@ -9,7 +9,7 @@
  * though the content existed in the repo.
  *
  * This script fills that gap. It seeds only what the published catalogue
- * needs — the six category pillars, the author accounts the courses reference,
+ * needs — the category pillars, the author accounts the courses reference,
  * and the authored courses themselves — and nothing that would be unsafe to
  * run against a live database:
  *
@@ -30,7 +30,7 @@ import { AUTHORED_COURSES, loadCourses } from "./content";
 const db = new PrismaClient();
 
 /**
- * The six pillars the catalogue is organised around. Kept in sync with the
+ * The pillars the catalogue is organised around. Kept in sync with the
  * category block in prisma/seed.ts — duplicated rather than imported so this
  * script has no dependency on the demo seed and can be reasoned about alone.
  */
@@ -95,6 +95,15 @@ const CATEGORIES: {
     sortOrder: 6,
     description:
       "Sleep, training, focus and emotional control. A broken body can't hold a big vision.",
+  },
+  {
+    name: "AI & Applied Tech",
+    slug: "ai-and-applied-tech",
+    pillar: "AI",
+    iconEmoji: "🤖",
+    sortOrder: 7,
+    description:
+      "Use AI as a tool without being used by it — prompt well, verify everything, and turn it into real work.",
   },
 ];
 

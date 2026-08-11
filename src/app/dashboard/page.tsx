@@ -16,6 +16,12 @@ import {
 } from "@/components/ui";
 import { Icon } from "@/components/Icon";
 import { formatDate, pluralize } from "@/lib/utils";
+import {
+  COMMENT_POINTS,
+  DAILY_COMMUNITY_POINT_CAP,
+  POST_POINTS,
+} from "@/server/services/community";
+import { CommunityPromo } from "./CommunityPromo";
 
 export const metadata: Metadata = { title: "Overview" };
 export const dynamic = "force-dynamic";
@@ -74,6 +80,16 @@ export default async function DashboardPage() {
               Join &amp; unlock
             </LinkButton>
           </Card>
+        )}
+
+        {/* Community participation nudge — only once they're in, so it doesn't
+            compete with the join gate above. Dismissible. */}
+        {user.communitiesJoinedAt && (
+          <CommunityPromo
+            postPoints={POST_POINTS}
+            commentPoints={COMMENT_POINTS}
+            dailyCap={DAILY_COMMUNITY_POINT_CAP}
+          />
         )}
 
         {/* Resume ------------------------------------------------------ */}
@@ -143,6 +159,31 @@ export default async function DashboardPage() {
             }
           />
         </div>
+
+        {/* Certificate ready — a permanent, obvious route to download, so a
+            member never has to hunt through notifications for it. */}
+        {stats.certificates > 0 && (
+          <Card variant="gold" pad="wide">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="eyebrow">
+                  🎓 Certificate{stats.certificates === 1 ? "" : "s"} ready
+                </p>
+                <h2 className="mt-2 text-[17px] leading-[1.25] font-extrabold text-mist-100 sm:text-[19px]">
+                  You&apos;ve earned {pluralize(stats.certificates, "certificate")}
+                  .
+                </h2>
+                <p className="mt-2 text-xs text-mist-400">
+                  Signed, serialised and verifiable — view or save as PDF any
+                  time.
+                </p>
+              </div>
+              <LinkButton href="/dashboard/certificates" size="lg">
+                View &amp; download
+              </LinkButton>
+            </div>
+          </Card>
+        )}
 
         {/* Track progress --------------------------------------------- */}
         {enrollments.length > 0 && (

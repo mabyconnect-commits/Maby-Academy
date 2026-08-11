@@ -111,5 +111,56 @@ export const reviewSchema = z.object({
 
 export const enrollSchema = z.object({ courseId: z.string().min(1) });
 
+// --- Live sessions -------------------------------------------------------
+
+export const liveSessionSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(3, "Give the session a clear title.")
+      .max(160, "That title is too long."),
+    description: z.string().trim().max(2000).optional(),
+    /** Optional — an academy-wide session has no course. */
+    courseId: z.string().min(1).optional(),
+    startsAt: z.coerce.date({ message: "Enter a valid start time." }),
+    endsAt: z.coerce.date({ message: "Enter a valid end time." }),
+    meetingUrl: z
+      .string()
+      .trim()
+      .url("Enter a valid link, including https://.")
+      .optional(),
+    capacity: z.coerce.number().int().positive().max(100000).optional(),
+    pointsValue: z.coerce.number().int().min(0).max(1000).optional(),
+  })
+  .refine((v) => v.endsAt > v.startsAt, {
+    message: "The end time must be after the start time.",
+    path: ["endsAt"],
+  })
+  .refine((v) => v.startsAt.getTime() > Date.now() - 60 * 60 * 1000, {
+    message: "Schedule the session for now or later, not in the past.",
+    path: ["startsAt"],
+  });
+
+// --- Lesson questions box ------------------------------------------------
+
+export const lessonQuestionSchema = z.object({
+  lessonId: z.string().min(1),
+  body: z
+    .string()
+    .trim()
+    .min(5, "Add a little detail so someone can actually help.")
+    .max(4000, "That question is too long — trim it down."),
+});
+
+export const lessonAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  body: z
+    .string()
+    .trim()
+    .min(2, "Write your answer first.")
+    .max(8000, "That answer is too long — trim it down."),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

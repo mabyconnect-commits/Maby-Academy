@@ -19,6 +19,9 @@ import { leadingOthers } from "./leading-others";
 import { deepFocus } from "./deep-focus";
 import { queryTheChain } from "./query-the-chain";
 import { restAndRecovery } from "./rest-and-recovery";
+import { aiFromZero } from "./ai-from-zero";
+import { aiForIncome } from "./ai-for-income";
+import { aiAndTheChain } from "./ai-and-the-chain";
 
 /**
  * The authored curriculum.
@@ -49,6 +52,9 @@ export const AUTHORED_COURSES: ContentCourse[] = [
   deepFocus,
   queryTheChain,
   restAndRecovery,
+  aiFromZero,
+  aiForIncome,
+  aiAndTheChain,
 ];
 
 export { loadCourse, loadCourses } from "./load";

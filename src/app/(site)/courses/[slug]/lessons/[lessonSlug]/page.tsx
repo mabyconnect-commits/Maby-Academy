@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { getCurrentUser } from "@/lib/auth/session";
+import { can, getCurrentUser, rolesOf } from "@/lib/auth/session";
+import { isStaffRole } from "@/lib/auth/permissions";
 import { getLessonForViewer } from "@/server/services/courses";
 import { getQuizAttempts } from "@/server/services/assessment";
+import { listLessonQuestions } from "@/server/services/lessonQuestions";
 import { Alert, Card, LinkButton, Pill, ProgressBar } from "@/components/ui";
 import { RichText } from "@/components/RichText";
 import { cn, formatDuration } from "@/lib/utils";
 import { CompleteLessonForm } from "./CompleteLessonForm";
 import { QuizForm } from "./QuizForm";
 import { AssignmentForm } from "./AssignmentForm";
+import { QuestionsBox } from "./QuestionsBox";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +63,18 @@ export default async function LessonPage({
   const hasPassedQuiz = quizAttempts.some((a) => a.passed);
 
   const path = `/courses/${slug}/lessons/${lessonSlug}`;
+
+  // The questions box is for people in the room: enrolled learners and staff.
+  const roles = user ? rolesOf(user) : [];
+  const isStaff = roles.some(isStaffRole);
+  const canModerate = user ? can(user, "report:review") : false;
+  const showQuestions = Boolean(enrollment) || isStaff;
+  const questions = showQuestions
+    ? await listLessonQuestions(
+        lesson.id,
+        user ? { id: user.id, role: user.role, extraRoles: user.extraRoles } : null,
+      )
+    : [];
 
   return (
     // max-w-6xl, not 7xl: the header and footer are 6xl, and a wider body
@@ -177,7 +192,11 @@ export default async function LessonPage({
           )}
 
           {/* Completion + navigation ----------------------------------- */}
-          {enrollment && (
+          {/* An assignment lesson completes when the tutor grades a pass, not
+              on a click — so the manual complete control is shown only where
+              there is no assignment. The AssignmentForm above carries the
+              submission status in the meantime. */}
+          {enrollment && !lesson.assignment && (
             <div className="mt-10 border-t border-rule pt-6">
               <CompleteLessonForm
                 lessonId={lesson.id}
@@ -200,6 +219,19 @@ export default async function LessonPage({
                 existingReflection={progress?.reflection ?? null}
               />
             </div>
+          )}
+
+          {/* Questions box -------------------------------------------- */}
+          {showQuestions && (
+            <QuestionsBox
+              lessonId={lesson.id}
+              path={path}
+              questions={questions}
+              currentUserId={user?.id ?? null}
+              canModerate={canModerate}
+              isStaff={isStaff}
+              canParticipate={Boolean(enrollment) || isStaff}
+            />
           )}
 
           <nav

@@ -171,8 +171,10 @@ model User {
   ticketsAssigned SupportTicket[]  @relation("TicketAgent")
   ticketMessages  SupportMessage[]
 
-  lessonNotes  LessonNote[]
-  savedLessons SavedLesson[]
+  lessonNotes     LessonNote[]
+  savedLessons    SavedLesson[]
+  lessonQuestions LessonQuestion[]
+  lessonAnswers   LessonAnswer[]
 
   pointsLedger         PointsTransaction[]
   badges               UserBadge[]
@@ -249,6 +251,7 @@ enum Pillar {
   HEALTH
   MINDSET
   LIFE_SKILLS
+  AI
 }
 
 enum CourseLevel {
@@ -519,6 +522,7 @@ model Lesson {
   quiz       Quiz?
   notes      LessonNote[]
   savedBy    SavedLesson[]
+  questions  LessonQuestion[]
 
   @@unique([moduleId, slug])
   @@index([moduleId])
@@ -1429,6 +1433,53 @@ model SavedLesson {
   @@unique([userId, lessonId])
   @@index([userId])
   @@map("saved_lessons")
+}
+
+/// A question asked in the context of a single lesson — the "questions box"
+/// a learner reaches for the moment something doesn't click, without leaving
+/// the lesson to find the right community thread. Distinct from LessonNote,
+/// which is private; a question is meant to be seen and answered.
+model LessonQuestion {
+  id       String @id @default(cuid())
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body     String
+  /// The asker (or a mentor) marks a question resolved once it has a good
+  /// answer, so the box surfaces what still needs attention.
+  isResolved Boolean          @default(false)
+  status     ModerationStatus @default(VISIBLE)
+  /// Denormalised counter, updated in the same transaction as the answer it
+  /// counts — a lesson list never needs an aggregate query to render.
+  answerCount Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  answers LessonAnswer[]
+
+  @@index([lessonId, createdAt])
+  @@index([authorId])
+  @@map("lesson_questions")
+}
+
+model LessonAnswer {
+  id         String         @id @default(cuid())
+  questionId String
+  question   LessonQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body       String
+  /// The asker or a mentor marks the answer that resolved it, so a later
+  /// reader with the same question finds the accepted reply first.
+  isAccepted Boolean          @default(false)
+  status     ModerationStatus @default(VISIBLE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([questionId, createdAt])
+  @@index([authorId])
+  @@map("lesson_answers")
 }
 
 // ===========================================================================

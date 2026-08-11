@@ -27,6 +27,7 @@ const PILLAR_ICONS: Record<string, IconName> = {
   "money-and-business": "card",
   "faith-and-purpose": "journal",
   "health-and-mindset": "seedling",
+  "ai-and-applied-tech": "spark",
 };
 
 const STEPS = [
@@ -118,7 +119,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 pb-14 sm:pb-24" id="pillars">
         <p className="eyebrow-wide">Learning tracks</p>
         <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-mist-100 sm:text-[32px]">
-          Six pillars, one person
+          Seven pillars, one person
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-[1.7] text-mist-400">
           Finance without character produces reckless traders, which is why the

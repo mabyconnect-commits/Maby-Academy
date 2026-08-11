@@ -186,6 +186,12 @@ export const NAV: Record<Workspace, NavSection[]> = {
           icon: "users",
         },
         {
+          href: "/dashboard/activity",
+          label: "Activity",
+          short: "Activity",
+          icon: "flame",
+        },
+        {
           href: "/dashboard/mentorship",
           label: "Mentorship",
           short: "Mentor",

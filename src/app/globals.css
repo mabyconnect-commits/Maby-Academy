@@ -356,3 +356,51 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Printing a certificate: the verify page is the printable sheet.
+   1. Hide the app chrome and the interactive controls (.no-print), so a saved
+      PDF is only the certificate and its verification details.
+   2. Force the light palette and print surfaces exactly, so the sheet is dark
+      text on white regardless of the viewer's theme or whether their browser
+      has "background graphics" switched on. Without this a dark-theme viewer
+      printed near-invisible light text on white. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  :root {
+    color-scheme: light;
+    --color-ink-950: #ffffff;
+    --color-ink-900: #ffffff;
+    --color-ink-850: #ffffff;
+    --color-ink-800: #f2f1ee;
+    --color-ink-880: #f4f2ed;
+    --color-ink-870: #f6f4ef;
+    --color-ink-700: #e3e1dc;
+    --color-ink-600: #cecac2;
+    --color-ink-500: #aca79c;
+    --color-mist-400: #6b6b70;
+    --color-mist-300: #4a4a4f;
+    --color-mist-200: #2a2a2e;
+    --color-mist-100: #0b0b0d;
+    --color-gold-600: #6b5316;
+    --color-gold-500: #8a6d20;
+    --color-gold-400: #a8862e;
+    --color-gold-300: #5c4712;
+    --color-growth-500: #2a7a53;
+    --color-flag-500: #b8433f;
+    --color-rule: rgb(11 11 13 / 0.12);
+    --color-rule-strong: rgb(11 11 13 / 0.2);
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

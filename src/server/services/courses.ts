@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { ServiceError } from "./auth";
 import { notify } from "./notifications";
+import { shuffle } from "@/lib/utils";
 
 export async function listCategories() {
   return db.category.findMany({
@@ -164,7 +165,10 @@ export async function getLessonForViewer(
         include: {
           questions: {
             orderBy: { sortOrder: "asc" },
-            include: { options: { orderBy: { sortOrder: "asc" } } },
+            // Never select isCorrect on this path: it is sent to the browser
+            // as quiz props, so including it would hand the learner the answer
+            // key. Grading reads correctness straight from the database.
+            include: { options: { select: { id: true, text: true } } },
           },
         },
       },
@@ -196,6 +200,15 @@ export async function getLessonForViewer(
   });
 
   if (!lesson) return null;
+
+  // Randomise option order per view so the correct answer's position carries
+  // no signal. Without this, a quiz authored with the right answer first is
+  // beaten by clicking the first option every time.
+  if (lesson.quiz) {
+    for (const question of lesson.quiz.questions) {
+      question.options = shuffle(question.options);
+    }
+  }
 
   const course = lesson.module.course;
   const flat = course.modules.flatMap((m) => m.lessons);
